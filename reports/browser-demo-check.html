@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supplied browser demo — inspection and test results</title>
+<style>
+body{max-width:1040px;margin:48px auto;padding:0 24px;background:#faf9f5;color:#242722;font:16px/1.65 system-ui,sans-serif}
+h1{font-size:38px;line-height:1.15;letter-spacing:-1px}h2{margin-top:40px}
+.note{padding:20px;background:#ecefe2;border-left:4px solid #69794b}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:14px 10px;border-bottom:1px solid #ddd}
+th{background:#eeeee8}code{overflow-wrap:anywhere}ul{padding-left:22px}
+small{color:#60655c}@media(max-width:700px){body{margin:24px auto}h1{font-size:28px}th,td{padding:10px 6px}}
+</style>
+<h1>Supplied browser demo<br>Inspection and test results</h1>
+<p><strong>This HTML is a browser demo, not Goar itself or a browser edition of Goar.</strong> Goar's Android marketing, payments and team capabilities are outside this test.</p>
+<p class="note">The original uploaded HTML was preserved byte-for-byte. Testing exercised the accessible interface in a browser, without entering credentials, changing providers or relays, clearing sessions, sending marketing messages, making payments or running remote commands.</p>
+<h2>File inspection</h2>
+<ul>
+<li>6 inline scripts: all passed JavaScript syntax checks.</li>
+<li>205 unique HTML IDs, no duplicate IDs; 65 buttons, 2 forms and 17 inputs.</li>
+<li>Embedded gzip payload: 4,919,122 bytes; inflated WebAssembly: 20,455,564 bytes, with valid WASM magic and version.</li>
+<li>The embedded Go/WASM runtime instantiated and reached its ready state in live testing.</li>
+<li>No separate JavaScript or WASM download is required to boot. Google Fonts is externally loaded.</li>
+<li>Original file SHA-256: <code>da2dd0ad9acc5a429620e82868ce92ae96ac6076142261485f8dcceba77ff4a0</code>.</li>
+</ul>
+<h2>Browser test results</h2>
+<table>
+<thead><tr><th>Area</th><th>Result</th><th>Evidence / limitation</th></tr></thead>
+<tbody>
+<tr><td>Startup and provider models</td><td>Passed</td><td>Default provider setup completed without a key. Captured model-list requests returned HTTP 200 from api.free.ai.</td></tr>
+<tr><td>Chat</td><td>Passed basic test</td><td>A harmless text prompt received “OK”. This does not verify long conversations, agent execution, file handling or every model.</td></tr>
+<tr><td>Slash help and status</td><td>Passed</td><td>Typing / exposed autocomplete. First Enter selected a suggestion; second Enter submitted it. /help showed command help and /status showed runtime details.</td></tr>
+<tr><td>Settings and theme</td><td>Passed</td><td>Settings opened. A theme-only change from goar-dark to goar-light saved, survived reopening Settings and remained after a page reload in the test browser.</td></tr>
+<tr><td>Local Terminal</td><td>Limited operation</td><td>Connected as local. pwd returned /tmp/goar-agent-home. printf was unsupported; this is a limited WASM/MEMFS shell, not a complete Linux shell.</td></tr>
+<tr><td>Default SSH connection</td><td>Failed dependency</td><td>Reported Wisp stream closed / SSH handshake failed and later EOF. No remote command was executed; user-configured hosts were not tested.</td></tr>
+<tr><td>History (/continue)</td><td>Navigation defect</td><td>A History picker opened, but Escape and outside click did not close it. No non-destructive close control was available; it blocked Terminal interaction. Reload recovered navigation without clearing sessions.</td></tr>
+<tr><td>Connectors (/connectors)</td><td>Panel passed; integration unverified</td><td>Panel opened, MCP information was shown, and its close control returned to chat. No connector was added or exercised against an external service.</td></tr>
+<tr><td>Plugins (/plugins)</td><td>Explicitly unavailable</td><td>Returned “No experimental harness plugins in this PWA build.”</td></tr>
+<tr><td>Files, Browser, Computer, Creative, Toolkit</td><td>Not accessible / untested</td><td>Markup and capability strings exist in the file, but no route to these panels was exposed by the tested header or slash suggestions. Presence in HTML does not establish functionality.</td></tr>
+<tr><td>Mobile layout</td><td>Passed inspected surfaces</td><td>At 402 × 874, chat, composer and visible Settings/Terminal controls had no obvious clipping or overlap.</td></tr>
+</tbody>
+</table>
+<h2>Discovered slash suggestions</h2>
+<p>/branch, /clear, /compact, /config, /connectors, /continue, /copy, /data-retention, /debug, /exit, /help, /log, /log-level, /loop, /mcp, /model, /new, /onboard, /paste-image, /plugins, /provider, /proxy, /proxy-setup, /quit, /reload, /reload-plugins, /rename, /resume, /retry, /rewind, /session, /setup, /skills, /status, /theme, /thinking, /whoami, :q, :quit, exit, quit.</p>
+<p>Discovery is not equivalent to testing every command. Destructive, external-service and experimental execution paths were not invoked.</p>
+<h2>Network and storage observations</h2>
+<ul>
+<li>Default Wisp relay: wss://wisp.mercurywork.shop/. Default model endpoint: https://api.free.ai/v1/models.</li>
+<li>The first inspection logged an uncorrelated 404. Later captured model-list responses were 200; no failing request was captured on the final reload. The 404 is not attributed to the model endpoint.</li>
+<li>A configuration-write warning was followed by an OPFS gateway save log. Theme persistence passed for a reload, but long-term recovery, backups and encryption were not verified.</li>
+<li>The visible “Kali connecting…” banner remained during successful chat. Status reported the shared SSH connection failed.</li>
+<li>Static inspection found support strings for other model providers and localhost Ollama/CDP services. These strings are not evidence that all such services run or were contacted.</li>
+<li>No static credential preset was found in the inspected shell. This is not a security audit of all compiled WASM behavior.</li>
+</ul>
+<h2>Coverage boundary</h2>
+<p>The whole HTML shell and all six inline scripts were inspected or syntax-checked, and the accessible safe journeys above were exercised. This is not exhaustive verification of every branch in the embedded 20 MB compiled runtime. Hidden panels, account-dependent services, remote SSH/VNC, creative generation, MCP execution, destructive session operations and other browser engines remain unverified.</p>
+<p>Priority issues: provide a safe History close control; clarify the limited local-shell command set; make SSH connection errors understandable; expose intended demo tools or remove inaccessible claims.</p>
+<small>Tested in the development preview. No claim is made about production availability, provider allowances or all-browser compatibility.</small>
+</html>

@@ -1,45 +1,31 @@
-# [Project name]
+# Goar
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A Goar product website linked to the user-supplied standalone browser demo. The demo is not Goar or a browser edition of Goar.
 
-## Run & Operate
+## Run & operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Managed workflow: `artifacts/goar: web`
+- Frontend typecheck: `pnpm --filter @workspace/goar run typecheck`
+- Product pages and launch page live in `artifacts/goar/src/site`.
+- The supplied application is served at `/workspace/index.html`.
+- Original legal text is extracted into `artifacts/goar/src/data/legal.json`.
 
-## Stack
+## Scope
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- The website describes the Android product's builds, communications, payment automation and team workspaces.
+- The supplied browser build exposes chat, Files, Terminal, Browser, Computer, Creative, Toolkit and provider configuration.
+- Do not represent Android-only capabilities as implemented in this browser build.
+- No APK or verified store URL has been supplied. Do not invent download links.
+- Original contact address needs confirmation before publishing.
 
-## Where things live
+## Runtime boundary
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+Preserve the uploaded standalone HTML as a separate application rather than importing its global scripts into React. Opening the launch link starts its embedded Go/WASM runtime; visiting marketing pages must not start it.
 
-## Architecture decisions
+The supplied application uses external fonts, a configured/default AI provider and a third-party Wisp relay. Its browser persistence is not guaranteed by this integration. No backend, authentication or provider proxy was added.
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+## Content
 
-## Product
+Use concrete tasks and qualified outcomes. No emojis, repeated feature grids, fabricated live metrics or absolute claims about uptime, backups or enterprise security.
 
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+`scripts/prepare-goar-assets.py` extracts original legal pages from an archive unpacked at `/tmp/goar-source` and prepares the brand assets. The original uploads remain in `.local/conversation-workspace/files/attached_assets`.

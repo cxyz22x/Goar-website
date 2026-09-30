@@ -1,0 +1,1 @@
+- [Product scope](product-scope.md) — the supplied browser HTML is a try-it demo, not Goar or a browser edition; keep Android product claims separate.

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Goar"
+description = "Goar product website connected to the supplied browser workspace, with clear use cases and access to chat, terminal, files and computer."
+version = "1.0.0"
+id = "artifacts/goar"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19774
+
+[services.development]
+run = "pnpm --filter @workspace/goar run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/goar", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/goar/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19774"
+BASE_PATH = "/"

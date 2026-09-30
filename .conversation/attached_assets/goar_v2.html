@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goar — One system on this phone</title>
+  <meta name="description" content="Goar is a private operator on your Android phone. Chat, files, terminal, browser, and a live VNC desktop. No account. No telemetry. Bring your own keys.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #060606;
+      --s1:      #0d0d0d;
+      --s2:      #141414;
+      --s3:      #1c1c1c;
+      --b0:      rgba(255,255,255,0.055);
+      --b1:      rgba(255,255,255,0.10);
+      --b2:      rgba(255,255,255,0.18);
+      --fg:      #ffffff;
+      --fg2:     rgba(255,255,255,0.68);
+      --fg3:     rgba(255,255,255,0.42);
+      --fg4:     rgba(255,255,255,0.22);
+      --bone:    #d4c4a8;
+      --bone2:   rgba(212,196,168,0.55);
+      --glow:    rgba(212,196,168,0.13);
+      --r:       20px;
+      --rl:      28px;
+      --max:     1180px;
+      --pad:     clamp(1.25rem, 5vw, 3rem);
+      --sans:    "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono:    "SF Mono", "Fira Code", ui-monospace, monospace;
+    }
+
+    html {
+      font-family: var(--sans);
+      background: var(--black);
+      color: var(--fg);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      scroll-behavior: smooth;
+    }
+    body { overflow-x: hidden; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ─── NAV ──────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 60px;
+      display: flex; align-items: center;
+      padding: 0 var(--pad);
+      gap: 1.5rem;
+      background: rgba(6,6,6,0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--b0);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-weight: 800; font-size: 1.05rem; letter-spacing: -0.04em;
+    }
+    .brand-mark {
+      width: 26px; height: 26px;
+      background: var(--fg);
+      border-radius: 7px;
+      display: grid; place-items: center;
+      font-size: 13px; font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.02em;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 0.15rem;
+      list-style: none; margin-left: auto;
+    }
+    .nav-links a {
+      padding: 0.38rem 0.8rem; border-radius: 999px;
+      font-size: 0.84rem; font-weight: 500;
+      color: var(--fg3); transition: color .15s, background .15s;
+    }
+    .nav-links a:hover { color: var(--fg); background: var(--b0); }
+    .nav-pill {
+      margin-left: 0.5rem;
+      padding: 0.42rem 1.1rem; border-radius: 999px;
+      background: var(--fg); color: var(--black);
+      font-size: 0.84rem; font-weight: 700;
+      transition: opacity .15s;
+    }
+    .nav-pill:hover { opacity: 0.82; }
+
+    /* ─── HERO ─────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem var(--pad) 6rem;
+      position: relative; overflow: hidden;
+    }
+    /* Radial bone glow */
+    .hero-glow {
+      position: absolute;
+      top: -10%; left: 50%; transform: translateX(-50%);
+      width: min(1000px, 130vw); aspect-ratio: 1.5;
+      background: radial-gradient(ellipse at 50% 40%,
+        rgba(212,196,168,0.14) 0%,
+        rgba(212,196,168,0.05) 35%,
+        transparent 65%);
+      pointer-events: none;
+    }
+    /* Dot grid */
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 68%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 68%);
+    }
+    .hero-tag {
+      position: relative; z-index: 2;
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      padding: 0.38rem 1rem; border-radius: 999px;
+      border: 1px solid var(--b1);
+      background: rgba(255,255,255,0.035);
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg3); margin-bottom: 2rem;
+    }
+    .hero-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--bone);
+      box-shadow: 0 0 10px var(--bone), 0 0 20px var(--bone2);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    .hero-h1 {
+      position: relative; z-index: 2;
+      font-size: clamp(3.8rem, 10vw, 8.5rem);
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.93;
+      margin-bottom: 1.75rem;
+      max-width: 12ch;
+    }
+    .grad {
+      background: linear-gradient(160deg, #fff 0%, #e0d4be 45%, rgba(212,196,168,0.7) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      position: relative; z-index: 2;
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      color: var(--fg3); max-width: 42ch; line-height: 1.65;
+      margin-bottom: 2.75rem;
+    }
+    .hero-btns {
+      position: relative; z-index: 2;
+      display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center;
+    }
+    .btn-solid {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.82rem 1.9rem; border-radius: 999px;
+      background: var(--fg); color: var(--black);
+      font-weight: 700; font-size: 0.9rem; letter-spacing: -0.01em;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-solid:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(255,255,255,0.14); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.82rem 1.9rem; border-radius: 999px;
+      border: 1px solid var(--b1); background: rgba(255,255,255,0.03);
+      color: var(--fg2); font-weight: 600; font-size: 0.9rem;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-outline:hover { border-color: var(--b2); color: var(--fg); background: rgba(255,255,255,0.06); }
+
+    /* ─── MARQUEE ───────────────────────────────────────────────────── */
+    .marquee-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--b0);
+      border-bottom: 1px solid var(--b0);
+      background: var(--s1);
+      padding: 0.9rem 0;
+    }
+    .marquee-inner {
+      display: flex; white-space: nowrap;
+      animation: scroll 35s linear infinite;
+    }
+    .marquee-inner:hover { animation-play-state: paused; }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .mitem {
+      display: inline-flex; align-items: center;
+      padding: 0 1.75rem;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fg4);
+    }
+    .mitem::after { content: "·"; margin-left: 1.75rem; color: var(--bone2); }
+
+    /* ─── SECTION SHELL ─────────────────────────────────────────────── */
+    .sec {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 6rem var(--pad);
+    }
+    .sec-label {
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--bone); margin-bottom: 0.9rem;
+    }
+    .sec-title {
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 900; letter-spacing: -0.045em; line-height: 1.06;
+      margin-bottom: 1rem;
+    }
+    .sec-body {
+      font-size: 1.05rem; color: var(--fg3);
+      max-width: 44ch; line-height: 1.7; margin-bottom: 3.5rem;
+    }
+
+    /* ─── BENTO GRID ────────────────────────────────────────────────── */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: 210px;
+      gap: 0.875rem;
+    }
+    .card {
+      background: var(--s1);
+      border: 1px solid var(--b0);
+      border-radius: var(--rl);
+      padding: 1.75rem;
+      display: flex; flex-direction: column;
+      overflow: hidden; position: relative;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .card:hover {
+      border-color: var(--b1);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .card::after {
+      content: "";
+      position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .card:hover::after { opacity: 1; }
+
+    /* sizes */
+    .c-chat     { grid-column: span 7; grid-row: span 2; }
+    .c-files    { grid-column: span 5; }
+    .c-terminal { grid-column: span 5; }
+    .c-computer { grid-column: span 4; grid-row: span 2; }
+    .c-browser  { grid-column: span 4; }
+    .c-creative { grid-column: span 4; }
+
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--s3); border: 1px solid var(--b1);
+      display: grid; place-items: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 1.2rem; font-weight: 750; letter-spacing: -0.03em;
+      margin-top: 1.4rem; margin-bottom: 0.35rem;
+    }
+    .c-chat .card-title { font-size: 1.5rem; }
+    .card-desc { font-size: 0.875rem; color: var(--fg3); line-height: 1.6; }
+
+    /* Chat preview */
+    .chat-area {
+      flex: 1; display: flex; flex-direction: column;
+      gap: 0.55rem; margin-top: 1.1rem; overflow: hidden;
+    }
+    .cmsg {
+      max-width: 80%;
+      padding: 0.6rem 0.88rem;
+      border-radius: 16px;
+      font-size: 0.8rem; line-height: 1.45;
+    }
+    .cmsg.u {
+      align-self: flex-end;
+      background: var(--fg); color: var(--black);
+      font-weight: 500; border-bottom-right-radius: 4px;
+    }
+    .cmsg.a {
+      align-self: flex-start;
+      background: var(--s3); border: 1px solid var(--b1);
+      color: var(--fg2); border-bottom-left-radius: 4px;
+    }
+    .ctool {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--bone2); margin-bottom: 0.2rem;
+    }
+
+    /* Terminal preview */
+    .term {
+      flex: 1; font-family: var(--mono); font-size: 0.75rem;
+      line-height: 1.85; color: var(--fg4);
+      margin-top: 0.9rem; overflow: hidden;
+    }
+    .term .pr { color: var(--bone); }
+    .term .c  { color: var(--fg2); }
+
+    /* VNC preview */
+    .vnc-frame {
+      flex: 1; background: var(--s3); border-radius: 10px;
+      border: 1px solid var(--b1); overflow: hidden; margin-top: 0.9rem;
+    }
+    .vnc-bar {
+      height: 26px; display: flex; align-items: center; gap: 5px;
+      padding: 0 10px; border-bottom: 1px solid var(--b0);
+      background: rgba(255,255,255,0.025);
+    }
+    .vdot { width: 9px; height: 9px; border-radius: 50%; }
+    .vr { background: rgba(255,95,86,0.55); }
+    .vy { background: rgba(255,189,68,0.55); }
+    .vg { background: rgba(39,201,63,0.55); }
+    .vnc-body { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .vrow { display: flex; gap: 0.5rem; }
+    .vblk { flex: 1; height: 20px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+
+    /* ─── PRIVACY BAND ──────────────────────────────────────────────── */
+    .band-wrap {
+      border-top: 1px solid var(--b0);
+      border-bottom: 1px solid var(--b0);
+      background: var(--s1);
+    }
+    .band {
+      max-width: var(--max); margin: 0 auto;
+      padding: 0 var(--pad);
+      display: grid; grid-template-columns: repeat(4,1fr);
+    }
+    .bitem {
+      padding: 3rem 0;
+      padding-right: 2.5rem;
+      border-right: 1px solid var(--b0);
+    }
+    .bitem:first-child { padding-left: 0; }
+    .bitem:last-child  { border-right: none; padding-right: 0; padding-left: 2.5rem; }
+    .bitem:not(:first-child):not(:last-child) { padding-left: 2.5rem; }
+    .bnum {
+      font-size: 2.8rem; font-weight: 900;
+      letter-spacing: -0.06em; line-height: 1;
+      margin-bottom: 0.35rem; color: var(--fg);
+      display: flex; align-items: baseline; gap: 0.3rem;
+    }
+    .bnum sub { font-size: 0.9rem; font-weight: 500; color: var(--bone); letter-spacing: 0; }
+    .blabel { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .bdesc  { font-size: 0.82rem; color: var(--fg3); line-height: 1.55; }
+
+    /* ─── SPECS GRID ────────────────────────────────────────────────── */
+    .specs {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border: 1px solid var(--b0); border-radius: var(--rl);
+      overflow: hidden; gap: 1px; background: var(--b0);
+    }
+    .sitem {
+      background: var(--s1); padding: 1.6rem 2rem;
+    }
+    .slabel {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      color: var(--fg4); margin-bottom: 0.45rem;
+    }
+    .sval {
+      font-size: 1rem; font-weight: 700;
+      font-family: var(--mono); letter-spacing: -0.01em;
+    }
+    .sbadge {
+      display: inline-block; margin-top: 0.3rem;
+      padding: 0.18rem 0.55rem; border-radius: 6px;
+      background: rgba(212,196,168,0.09);
+      border: 1px solid rgba(212,196,168,0.18);
+      color: var(--bone); font-size: 0.72rem;
+      font-family: var(--mono); font-weight: 600;
+    }
+
+    /* ─── LEGAL CARDS ───────────────────────────────────────────────── */
+    .legal {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 0.875rem;
+    }
+    .lcard {
+      background: var(--s1); border: 1px solid var(--b0);
+      border-radius: var(--rl); padding: 1.85rem;
+      display: flex; flex-direction: column;
+      transition: border-color .2s, transform .2s;
+    }
+    .lcard:hover { border-color: var(--b1); transform: translateY(-2px); }
+    .licon {
+      width: 42px; height: 42px; border-radius: 11px;
+      background: var(--s3); border: 1px solid var(--b1);
+      display: grid; place-items: center; font-size: 1.15rem;
+      margin-bottom: 1.3rem;
+    }
+    .ltitle { font-size: 1.05rem; font-weight: 750; letter-spacing: -0.025em; margin-bottom: 0.5rem; }
+    .ldesc  { font-size: 0.855rem; color: var(--fg3); line-height: 1.6; flex: 1; margin-bottom: 1.5rem; }
+    .llink  {
+      font-size: 0.83rem; font-weight: 700; color: var(--bone);
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      transition: gap .15s;
+    }
+    .llink:hover { gap: 0.55rem; }
+
+    /* ─── CTA ───────────────────────────────────────────────────────── */
+    .cta-wrap {
+      position: relative; overflow: hidden;
+      padding: 8rem var(--pad); text-align: center;
+    }
+    .cta-glow {
+      position: absolute; bottom: -10%; left: 50%; transform: translateX(-50%);
+      width: min(700px, 100vw); aspect-ratio: 2;
+      background: radial-gradient(ellipse at 50% 100%,
+        rgba(212,196,168,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 900; letter-spacing: -0.055em; line-height: 0.95;
+      margin-bottom: 1.3rem; position: relative; z-index: 1;
+    }
+    .cta-sub {
+      font-size: 1.05rem; color: var(--fg3);
+      max-width: 38ch; margin: 0 auto 2.75rem;
+      line-height: 1.65; position: relative; z-index: 1;
+    }
+    .cta-btns {
+      display: flex; gap: 0.9rem; justify-content: center;
+      flex-wrap: wrap; position: relative; z-index: 1;
+    }
+
+    /* ─── FOOTER ────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--b0);
+      padding: 2.25rem var(--pad);
+    }
+    .foot {
+      max-width: var(--max); margin: 0 auto;
+      display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+    }
+    .foot-brand { font-weight: 800; font-size: 0.88rem; letter-spacing: -0.04em; margin-right: auto; }
+    .foot-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .foot-links a { font-size: 0.82rem; color: var(--fg3); transition: color .15s; }
+    .foot-links a:hover { color: var(--fg); }
+    .foot-bar {
+      width: 100%;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+      padding-top: 1.5rem; border-top: 1px solid var(--b0);
+      font-size: 0.78rem; color: var(--fg4);
+    }
+
+    /* ─── SCROLL FADE ───────────────────────────────────────────────── */
+    .fade { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+    .fade.on { opacity: 1; transform: none; }
+    .fade[data-d="1"] { transition-delay: .08s; }
+    .fade[data-d="2"] { transition-delay: .16s; }
+    .fade[data-d="3"] { transition-delay: .24s; }
+    .fade[data-d="4"] { transition-delay: .32s; }
+    .fade[data-d="5"] { transition-delay: .40s; }
+    .fade[data-d="6"] { transition-delay: .48s; }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────────────── */
+    @media (max-width: 980px) {
+      .c-chat     { grid-column: span 12; grid-row: span 2; }
+      .c-files    { grid-column: span 6; }
+      .c-terminal { grid-column: span 6; }
+      .c-computer { grid-column: span 12; }
+      .c-browser  { grid-column: span 6; }
+      .c-creative { grid-column: span 6; }
+      .band       { grid-template-columns: 1fr 1fr; }
+      .bitem:nth-child(2) { border-right: none; padding-right: 0; }
+      .bitem:nth-child(3) { border-top: 1px solid var(--b0); padding-left: 0; }
+      .bitem:nth-child(4) { border-top: 1px solid var(--b0); }
+      .specs { grid-template-columns: 1fr 1fr; }
+      .legal { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .bento { grid-auto-rows: 180px; }
+      .c-files,.c-terminal,.c-browser,.c-creative { grid-column: span 12; }
+      .band  { grid-template-columns: 1fr; }
+      .bitem { border-right: none; padding: 2rem 0; border-top: 1px solid var(--b0); }
+      .bitem:first-child { border-top: none; }
+      .bitem:last-child  { padding-left: 0; }
+      .specs { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ────────────────────────────────────────────────────────── -->
+  <header class="nav">
+    <a href="index.html" class="brand">
+      <div class="brand-mark">G</div>
+      Goar
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#legal">Legal</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <a href="#download" class="nav-pill">Download</a>
+  </header>
+
+  <!-- ── HERO ───────────────────────────────────────────────────────── -->
+  <section class="hero" aria-label="Hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <div class="hero-tag">
+      <span class="hero-dot" aria-hidden="true"></span>
+      Android &nbsp;·&nbsp; arm64 &nbsp;·&nbsp; F-Droid
+    </div>
+
+    <h1 class="hero-h1">
+      <span class="grad">One&nbsp;system.</span><br>
+      On this phone.
+    </h1>
+
+    <p class="hero-sub">
+      Chat, files, terminal, browser, and a live VNC desktop — running as a private operator on your device.
+      No account. No telemetry. Your keys, your machines.
+    </p>
+
+    <div class="hero-btns">
+      <a href="#download" class="btn-solid">
+        Download APK
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M3 6l4 4 4-4M2 12h10" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#features" class="btn-outline">
+        Explore features
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── MARQUEE ─────────────────────────────────────────────────────── -->
+  <div class="marquee-wrap" aria-hidden="true">
+    <div class="marquee-inner">
+      <span class="mitem">Chat</span><span class="mitem">Files</span><span class="mitem">Terminal</span>
+      <span class="mitem">VNC Desktop</span><span class="mitem">Browser</span><span class="mitem">Creative</span>
+      <span class="mitem">No Account</span><span class="mitem">MIT License</span><span class="mitem">No Telemetry</span>
+      <span class="mitem">SSH</span><span class="mitem">MCP</span><span class="mitem">arm64</span>
+      <span class="mitem">Android 8+</span><span class="mitem">F-Droid Honest</span><span class="mitem">Bring Your Keys</span>
+      <!-- duplicate for seamless loop -->
+      <span class="mitem">Chat</span><span class="mitem">Files</span><span class="mitem">Terminal</span>
+      <span class="mitem">VNC Desktop</span><span class="mitem">Browser</span><span class="mitem">Creative</span>
+      <span class="mitem">No Account</span><span class="mitem">MIT License</span><span class="mitem">No Telemetry</span>
+      <span class="mitem">SSH</span><span class="mitem">MCP</span><span class="mitem">arm64</span>
+      <span class="mitem">Android 8+</span><span class="mitem">F-Droid Honest</span><span class="mitem">Bring Your Keys</span>
+    </div>
+  </div>
+
+  <!-- ── FEATURES ────────────────────────────────────────────────────── -->
+  <div class="sec" id="features">
+    <p class="sec-label fade">Features</p>
+    <h2 class="sec-title fade" data-d="1">Everything your phone<br>was always missing.</h2>
+    <p class="sec-body fade" data-d="2">Six surfaces. One session. A private operator that runs on your hardware, and nobody else's.</p>
+
+    <div class="bento">
+
+      <!-- CHAT -->
+      <div class="card c-chat fade" data-d="1">
+        <div class="card-icon" aria-hidden="true">💬</div>
+        <div class="chat-area" aria-hidden="true">
+          <div class="cmsg u">Clone my dotfiles onto the VPS</div>
+          <div class="cmsg a">
+            <div class="ctool">Tool · shell</div>
+            Running git clone on sandbox…
+          </div>
+          <div class="cmsg a">Done. Linked .zshrc and .config/nvim.</div>
+          <div class="cmsg u">Now open the nvim config in the editor</div>
+          <div class="cmsg a">
+            <div class="ctool">Tool · files · open</div>
+            Opened ~/.config/nvim/init.lua
+          </div>
+        </div>
+        <div class="card-title">Chat</div>
+        <p class="card-desc">The operator loop. Tools, memory, skills, and Computer live in every conversation. Composer is a pill: attach, type, send.</p>
+      </div>
+
+      <!-- FILES -->
+      <div class="card c-files fade" data-d="2">
+        <div class="card-icon" aria-hidden="true">📁</div>
+        <div class="card-title">Files &amp; Notes</div>
+        <p class="card-desc">Browse SSH or the on-device sandbox. Search, upload, zip, notes editor, code editor, Git clone.</p>
+      </div>
+
+      <!-- TERMINAL -->
+      <div class="card c-terminal fade" data-d="3">
+        <div class="card-icon" aria-hidden="true">⌨️</div>
+        <div class="card-title">Terminal</div>
+        <div class="term" aria-hidden="true">
+          <div><span class="pr">~</span> <span class="c">ssh vps</span></div>
+          <div><span class="pr">vps</span> <span class="c">tmux new -s work</span></div>
+          <div><span class="pr">work</span> <span class="c">htop</span></div>
+        </div>
+      </div>
+
+      <!-- COMPUTER -->
+      <div class="card c-computer fade" data-d="2">
+        <div class="card-icon" aria-hidden="true">🖥️</div>
+        <div class="vnc-frame" aria-hidden="true">
+          <div class="vnc-bar">
+            <div class="vdot vr"></div>
+            <div class="vdot vy"></div>
+            <div class="vdot vg"></div>
+          </div>
+          <div class="vnc-body">
+            <div class="vrow"><div class="vblk" style="opacity:.5"></div><div class="vblk" style="flex:2;opacity:.35"></div></div>
+            <div class="vrow"><div class="vblk" style="height:36px"></div><div class="vblk" style="height:36px;opacity:.5"></div></div>
+            <div class="vrow"><div class="vblk" style="flex:2;height:28px;opacity:.35"></div><div class="vblk" style="height:28px;opacity:.6"></div></div>
+          </div>
+        </div>
+        <div class="card-title" style="margin-top:1rem">Computer</div>
+        <p class="card-desc">Live VNC desktop via SSH tunnel. You set port, resolution, and password in Settings.</p>
+      </div>
+
+      <!-- BROWSER -->
+      <div class="card c-browser fade" data-d="3">
+        <div class="card-icon" aria-hidden="true">🌐</div>
+        <div class="card-title">Browser</div>
+        <p class="card-desc">One in-app browser the operator and agent share. Choose your own search and fetch endpoints.</p>
+      </div>
+
+      <!-- CREATIVE -->
+      <div class="card c-creative fade" data-d="4">
+        <div class="card-icon" aria-hidden="true">🎨</div>
+        <div class="card-title">Creative</div>
+        <p class="card-desc">Stills, edits, video through providers you enable. Pollinations stills need no key to start.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PRIVACY BAND ─────────────────────────────────────────────────── -->
+  <div class="band-wrap" id="privacy">
+    <div class="band">
+      <div class="bitem fade">
+        <div class="bnum">0 <sub>accounts</sub></div>
+        <div class="blabel">No account</div>
+        <p class="bdesc">Nothing is sent to a Goar server. There isn't one.</p>
+      </div>
+      <div class="bitem fade" data-d="1">
+        <div class="bnum">0 <sub>trackers</sub></div>
+        <div class="blabel">No telemetry</div>
+        <p class="bdesc">No analytics, crash reports, ads, or update pings.</p>
+      </div>
+      <div class="bitem fade" data-d="2">
+        <div class="bnum">∞ <sub>providers</sub></div>
+        <div class="blabel">Your keys</div>
+        <p class="bdesc">AI providers, SSH, and MCP URLs stored on-device.</p>
+      </div>
+      <div class="bitem fade" data-d="3">
+        <div class="bnum">∞ <sub>machines</sub></div>
+        <div class="blabel">Your machines</div>
+        <p class="bdesc">Sandbox on the phone, or SSH to any VPS you own.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TECH SPECS ──────────────────────────────────────────────────── -->
+  <div class="sec">
+    <p class="sec-label fade">Technical</p>
+    <h2 class="sec-title fade" data-d="1">Built right.<br>No compromises.</h2>
+    <p class="sec-body fade" data-d="2">Package <code style="font-family:var(--mono);font-size:.9em;color:var(--bone)">app.goar</code> — open, honest, and Play-ready from the first build.</p>
+
+    <div class="specs fade" data-d="3">
+      <div class="sitem">
+        <div class="slabel">Platform</div>
+        <div class="sval">Android 8+</div>
+        <div class="sbadge">API&nbsp;26+</div>
+      </div>
+      <div class="sitem">
+        <div class="slabel">Architecture</div>
+        <div class="sval">arm64-v8a</div>
+        <div class="sbadge">64-bit only</div>
+      </div>
+      <div class="sitem">
+        <div class="slabel">Package ID</div>
+        <div class="sval">app.goar</div>
+        <div class="sbadge">Play &amp; F-Droid</div>
+      </div>
+      <div class="sitem">
+        <div class="slabel">License</div>
+        <div class="sval">MIT</div>
+        <div class="sbadge">Open source</div>
+      </div>
+      <div class="sitem">
+        <div class="slabel">Cloud backup</div>
+        <div class="sval">Disabled</div>
+        <div class="sbadge">On-device only</div>
+      </div>
+      <div class="sitem">
+        <div class="slabel">Posture</div>
+        <div class="sval">F-Droid honest</div>
+        <div class="sbadge">No hidden calls</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LEGAL ───────────────────────────────────────────────────────── -->
+  <div class="sec" id="legal">
+    <p class="sec-label fade">Legal &amp; Compliance</p>
+    <h2 class="sec-title fade" data-d="1">Play-ready<br>from day one.</h2>
+    <p class="sec-body fade" data-d="2">Every document the Play Store and F-Droid require ships inside the APK and lives on this site.</p>
+
+    <div class="legal">
+      <div class="lcard fade" data-d="1">
+        <div class="licon">🔒</div>
+        <div class="ltitle">Privacy Policy</div>
+        <p class="ldesc">Required Play Store URL. What stays on device, what leaves only because you sent it, and how to delete your data.</p>
+        <a href="privacy.html" class="llink">Read privacy →</a>
+      </div>
+      <div class="lcard fade" data-d="2">
+        <div class="licon">📄</div>
+        <div class="ltitle">Terms &amp; Licence</div>
+        <p class="ldesc">You're responsible for the keys and hosts you attach. MIT licence. No warranty. No blame to the publisher.</p>
+        <a href="terms.html" class="llink">Read terms →</a>
+      </div>
+      <div class="lcard fade" data-d="3">
+        <div class="licon">🛡️</div>
+        <div class="ltitle">Data Safety</div>
+        <p class="ldesc">Mapped directly to the Play Data Safety form. We collect nothing. Third parties are only the ones you configure.</p>
+        <a href="data-safety.html" class="llink">View data safety →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA ─────────────────────────────────────────────────────────── -->
+  <section class="cta-wrap" id="download" aria-label="Download">
+    <div class="cta-glow" aria-hidden="true"></div>
+    <h2 class="cta-title fade">
+      <span class="grad">Your phone.</span><br>Your operator.
+    </h2>
+    <p class="cta-sub fade" data-d="1">No sign-up. No cloud. Download the APK and you're running in under a minute.</p>
+    <div class="cta-btns fade" data-d="2">
+      <a href="#" class="btn-solid">
+        Download APK
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M3 6l4 4 4-4M2 12h10" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="contact.html" class="btn-outline">Get in touch</a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="foot">
+      <span class="foot-brand">Goar</span>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="license.html">License</a>
+        <a href="data-safety.html">Data safety</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="foot-bar">
+        <span>© 2026 Goar · MIT License</span>
+        <span>No cookies · No trackers · No Goar server</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // Scroll-driven fade-ins
+      var els = document.querySelectorAll('.fade');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+        els.forEach(function (el) { io.observe(el); });
+      } else {
+        els.forEach(function (el) { el.classList.add('on'); });
+      }
+
+      // Hero fades in immediately
+      document.querySelectorAll('.hero .hero-tag, .hero .hero-h1, .hero .hero-sub, .hero .hero-btns').forEach(function (el) {
+        el.classList.add('fade');
+        el.classList.add('on');
+      });
+
+      // Smooth anchor scroll
+      document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          var id = a.getAttribute('href').slice(1);
+          var target = document.getElementById(id);
+          if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
