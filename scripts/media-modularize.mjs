@@ -1,8 +1,20 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { mkdir, readFile, writeFile, access } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 
 const sourcePath = "attached_assets/goar_(16)_1790817694377.html";
-const outputRoot = "artifacts/goar/public/media";
+// This is the preserved-source importer, not the authority for maintained app modules.
+// Refuse to silently overwrite repaired/design-updated modules on a future import.
+const outputOption = process.argv.find(argument => argument.startsWith("--output="));
+const outputRoot = outputOption?.slice("--output=".length) || "artifacts/goar/public/media";
+const maintainedRoot = resolve("artifacts/goar/public/media");
+if (resolve(outputRoot) === maintainedRoot) {
+  try {
+    await access(join(outputRoot, "modules/entry.js"));
+    throw new Error("The media app is already imported and maintained. Use --output=/tmp/goar-media-reference to extract a fresh source comparison without overwriting the working app.");
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+}
 const original = await readFile(sourcePath, "utf8");
 const write = async (relativePath, contents) => {
   const filePath = join(outputRoot, relativePath);

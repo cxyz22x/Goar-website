@@ -1,15 +1,18 @@
 import "../../../services/storage.js";
 globalThis.modalBackdrop= document.getElementById("modalBackdrop");
 globalThis.modalContent= document.getElementById("modalContent");
+let modalReturnFocus = null;
 globalThis.miniCard = function miniCard(item, idx, type){
-  return '<div class="mini-card anim-up" style="animation-delay:' + (idx*35) + 'ms" data-id="' + item.id + '" data-type="' + type + '">' +
-    '<div class="mc-img"><img loading="lazy" src="' + posterImg(item,"w342") + '" alt=""><div class="mc-rating">★ ' + ratingOf(item) + '</div></div>' +
-    '<div class="mc-title">' + titleOf(item) + '</div></div>';
+  return '<button type="button" class="mini-card anim-up" style="animation-delay:' + (idx*35) + 'ms" data-id="' + item.id + '" data-type="' + type + '">' +
+    '<span class="mc-img"><img loading="lazy" src="' + posterImg(item,"w342") + '" alt=""><span class="mc-rating">★ ' + ratingOf(item) + '</span></span>' +
+    '<span class="mc-title">' + titleOf(item) + '</span></button>';
 }
 globalThis.modalToken= 0;
 globalThis.openModal = async function openModal(id, type, focusWatch=false){
+  if (!modalBackdrop.classList.contains("open")) modalReturnFocus = document.activeElement;
   const myToken = ++modalToken;
   modalBackdrop.classList.add("open");
+  modalBackdrop.setAttribute("aria-hidden", "false");
   modalContent.innerHTML = '<div class="loader">Loading details…</div>';
   try {
     const data = await tmdb("/" + type + "/" + id, {append_to_response:"credits,videos,external_ids,similar,recommendations"});
@@ -37,7 +40,7 @@ globalThis.openModal = async function openModal(id, type, focusWatch=false){
       '<div class="modal-overview">' + (data.overview || "No overview available.") + '</div>' +
       '<div class="modal-watch">' +
       '<button class="btn btn-play" id="modalPlay">▶ Watch Now</button>' +
-      '<button class="btn-icon ' + (saved?'saved':'') + '" id="modalSave">' + bookmarkSvg(saved) + '</button>' +
+      '<button type="button" class="btn-icon ' + (saved?'saved':'') + '" id="modalSave" aria-pressed="' + saved + '" aria-label="' + (saved ? "Remove from My List" : "Add to My List") + '">' + bookmarkSvg(saved) + '</button>' +
       (trailer ? '<button class="btn btn-ghost" id="modalTrailer">▶ Trailer</button>' : '') +
       '<span class="modal-watch-note">' + (type==="tv" ? "Starts at Season 1, Episode 1." : "Plays through encrypted WISP tunnel.") + '</span></div>' +
       (cast.length ? '<div class="modal-section"><div class="modal-section-title">Top Cast</div><div class="cast-rail">' +
@@ -56,26 +59,54 @@ globalThis.openModal = async function openModal(id, type, focusWatch=false){
       toggleSave(data, type);
       const s = isSaved(id, type);
       const mb = document.getElementById("modalSave");
-      mb.classList.toggle("saved", s); mb.innerHTML = bookmarkSvg(s);
+      mb.classList.toggle("saved", s);
+      mb.setAttribute("aria-pressed", String(s));
+      mb.setAttribute("aria-label", s ? "Remove from My List" : "Add to My List");
+      mb.innerHTML = bookmarkSvg(s);
     };
     const trBtn = document.getElementById("modalTrailer");
-    if (trBtn && trailer) trBtn.onclick = () => window.open("https://www.youtube.com/watch?v=" + trailer.key, "_blank");
+    if (trBtn && trailer) trBtn.onclick = () => window.open("https://www.youtube.com/watch?v=" + trailer.key, "_blank", "noopener,noreferrer");
     modalContent.querySelectorAll(".mini-card").forEach(mc => {
       mc.onclick = () => { closeModal(); setTimeout(() => openModal(mc.dataset.id, mc.dataset.type), 100); };
     });
+    document.getElementById("modalCloseBtn").focus();
   } catch(e){
     if (myToken !== modalToken) return;
-    modalContent.innerHTML = '<div class="loader err">Couldn\'t load details.<br><code>' + e.message + '</code><br><button class="btn btn-ghost" id="modalCloseBtn2" style="margin-top:10px;">Close</button></div>';
-    document.getElementById("modalCloseBtn2").onclick = closeModal;
+    modalContent.replaceChildren();
+    const error = document.createElement("div");
+    error.className = "loader err";
+    error.setAttribute("role", "alert");
+    error.textContent = "Could not load title details. Check your connection and retry.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "btn btn-ghost";
+    retry.textContent = "Retry";
+    retry.onclick = () => openModal(id, type, focusWatch);
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "btn btn-ghost";
+    close.textContent = "Close";
+    close.onclick = closeModal;
+    error.append(retry, close);
+    modalContent.appendChild(error);
+    retry.focus();
   }
 }
-globalThis.closeModal = function closeModal(){ modalBackdrop.classList.remove("open"); modalContent.innerHTML = ""; }
+globalThis.closeModal = function closeModal(){
+  modalToken++;
+  modalBackdrop.classList.remove("open");
+  modalBackdrop.setAttribute("aria-hidden", "true");
+  modalContent.innerHTML = "";
+  if (modalReturnFocus && modalReturnFocus.isConnected) modalReturnFocus.focus();
+  else document.querySelector("#view-watch nav a.active")?.focus();
+  modalReturnFocus = null;
+}
 modalBackdrop.addEventListener("click", e => { if (e.target === modalBackdrop) closeModal(); });
 document.addEventListener("keydown", e => {
   if (!document.getElementById("view-watch").classList.contains("on")) return;
   if (e.key === "Escape"){
     if (document.getElementById("playerOverlay").classList.contains("open")) closePlayer();
-    else closeModal();
+    else if (modalBackdrop.classList.contains("open")) closeModal();
   }
   if (e.key === "/" && !e.target.matches("input,select,textarea")){ e.preventDefault(); searchInput.focus(); }
 });

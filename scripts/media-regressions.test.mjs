@@ -13,11 +13,20 @@ const readMedia = (path) => readFile(resolve(mediaRoot, path), "utf8");
 test("generated CSS preserves every authored line in cascade order", async () => {
   const authoredCss = sourceHtml.match(/<style>([\s\S]*?)<\/style>/i)?.[1];
   assert.ok(authoredCss, "the uploaded page must retain its authored stylesheet");
-  const generatedCss = (
-    await Promise.all(["watch", "music", "shell", "games", "overrides"].map((name) => readMedia(`styles/${name}.css`)))
-  ).join("\n");
-  assert.ok(generatedCss.startsWith(authoredCss), "generated CSS must include the full source cascade without gaps or reordering");
-  assert.ok(generatedCss.slice(authoredCss.length).includes(".media-service-links"), "only the discreet service-link rules may follow the source CSS");
+  const names = ["watch", "music", "shell", "games", "overrides"];
+  const files = await Promise.all(names.map((name) => readMedia(`styles/${name}.css`)));
+  const generatedCss = files.join("\n");
+  const sourceLines = authoredCss.split("\n");
+  const sourceChunks = [[0, 385], [385, 520], [520, 557], [557, 578], [578, sourceLines.length]]
+    .map(([start, end]) => sourceLines.slice(start, end).join("\n"));
+  let lastSourcePosition = -1;
+  for (const chunk of sourceChunks) {
+    const position = generatedCss.indexOf(chunk);
+    assert.ok(position > lastSourcePosition, "all authored CSS segments must remain intact and in cascade order");
+    lastSourcePosition = position;
+  }
+  assert.ok(files[3].indexOf(".game-library-head") > files[3].indexOf(sourceChunks[3]), "games-only visual improvements must follow the authored games styles");
+  assert.ok(generatedCss.indexOf(".media-service-links") > lastSourcePosition, "the shared service-link rules must remain after the authored source cascade");
 });
 
 test("music WISP HLS loader is explicitly shared with the music player engine", async () => {
@@ -116,6 +125,41 @@ test("initial and history navigation both accept the safe view and legacy v para
   assert.ok(router.includes('params.get("view") || params.get("v") || "home"'), "the initial view helper must prioritize view and retain v compatibility");
   assert.ok(router.includes("show((ev.state&&ev.state.view)||requestedInitialView(), false)"), "popstate must use the same validated query helper");
   assert.ok(router.includes("show(requestedInitialView(), false)"), "initial routing must use the validated query helper");
+});
+
+test("games retain the supplied catalogue and expose resilient player controls", async () => {
+  const [{ GAMES }, controller, view, { gamePlayer: player }, styles] = await Promise.all([
+    import(pathToFileURL(resolve(mediaRoot, "data/game-catalog.js")).href),
+    readMedia("modules/games/controller.js"),
+    readMedia("modules/templates/games/view.js"),
+    import(pathToFileURL(resolve(mediaRoot, "modules/templates/games/player.js")).href),
+    readMedia("styles/games.css"),
+  ]);
+  assert.equal(GAMES.length, 690, "the complete supplied games catalogue must remain available");
+  assert.equal(new Set(GAMES.map((game) => game.id)).size, GAMES.length, "game IDs must be unique");
+  assert.ok(GAMES.every((game) => {
+    try {
+      const url = new URL(game.file);
+      return url.protocol === "https:" && ["cdn-factory.marketjs.com", "cdn-consumer.marketjs.com"].includes(url.hostname);
+    } catch {
+      return false;
+    }
+  }), "game sources must stay on the supplied HTTPS publishers");
+  const needsCanonicalSlash = GAMES.filter((game) => {
+    const url = new URL(game.file);
+    return url.hostname === "cdn-consumer.marketjs.com" && /^\/game\/[^/]+$/.test(url.pathname);
+  }).map((game) => game.id);
+  assert.deepEqual(needsCanonicalSlash.sort(), ["m-idle-mining-empire", "m-spidey-swing"]);
+  assert.ok(controller.includes('url.pathname += "/"'), "consumer game URLs must avoid known redirect-only paths");
+  assert.ok(controller.includes("frame.onload") && controller.includes("frame.onerror"), "frame loading and failure must be handled");
+  assert.ok(controller.includes("window.clearTimeout(gameTimer)") && controller.includes("publisher may block embedded play"), "stale loads and blocked embeds must have a recovery path");
+  assert.ok(controller.includes('getElementById("gameRetry")') && controller.includes('getElementById("gameStandalone")'), "retry and standalone fallback controls must be bound");
+  assert.ok(controller.includes("frame.requestFullscreen"), "the player must expose a fullscreen path");
+  assert.ok(view.includes("gameSearch") && view.includes("gameCats") && view.includes("Some publishers restrict embedded play"), "catalogue search, filters and external availability disclosure must remain");
+  assert.ok(player.includes('role="dialog"') && player.includes('role="status"') && player.includes("allowfullscreen"), "the player shell must expose accessible status and fullscreen");
+  assert.ok(player.includes('rel="noopener noreferrer"') && player.includes("sandbox="), "standalone navigation and embedded permissions must be explicit");
+  assert.ok(styles.includes(".game-library-head") && styles.includes("#gamePlay .gp-bar") && styles.includes("#view-games .ggrid"), "games view and player styling must remain scoped");
+  assert.ok(["#efe9df", "#f4efe6", "#e4ddd2", "Segoe UI"].every((token) => styles.includes(token)), "games styling must follow the actual paper-and-ink light theme tokens");
 });
 
 test("all generated relative JavaScript imports resolve", async () => {

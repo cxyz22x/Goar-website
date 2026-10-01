@@ -1,14 +1,17 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { BASE } from '../data/content';
 
-export function Navigation() {
+const media = (view: string) => `${BASE}media/index.html?view=${view}`;
+
+export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
+  const [loc] = useLocation();
   return (
-    <nav className="nav" aria-label="Primary">
-      <a href={`${BASE}#uses`}>Use cases</a>
-      <a href={`${BASE}#control`}>Your data</a>
-      <a href={`${BASE}#get`}>Availability</a>
-      <Link href="/connections" data-testid="link-connections">Connections</Link>
-      <Link href="/agent" data-testid="link-agent">Agent</Link>
+    <nav className="nav" id="site-nav" aria-label="Primary" onClick={onNavigate}>
+      <a href={BASE}>Overview</a>
+      <Link href="/agent" aria-current={loc === '/agent' ? 'page' : undefined} data-testid="link-agent">Agent</Link>
+      <a href={media('watch')} data-testid="link-watch">Watch</a>
+      <a href={media('music')} data-testid="link-music">Music</a>
+      <a href={media('games')} data-testid="link-games">Games</a>
     </nav>
   );
 }

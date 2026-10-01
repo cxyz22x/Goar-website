@@ -36,7 +36,7 @@ export function useRuntimeStatus() {
     };
     update();
     const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style'], characterData: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'aria-hidden'], characterData: true });
     observerRef.current = observer;
     timerRef.current = window.setTimeout(() => {
       if (readRuntimeSnapshot(document!).phase === 'loading') setTimedOut(true);

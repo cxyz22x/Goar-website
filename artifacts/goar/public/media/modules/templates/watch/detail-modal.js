@@ -1,1 +1,1 @@
-export const detailModal = "<div class=\"modal-backdrop\" id=\"modalBackdrop\"><div class=\"modal\" id=\"modalContent\"></div></div>";
+export const detailModal = "<div class=\"modal-backdrop\" id=\"modalBackdrop\" aria-hidden=\"true\"><div class=\"modal\" id=\"modalContent\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Title details\" tabindex=\"-1\"></div></div>";

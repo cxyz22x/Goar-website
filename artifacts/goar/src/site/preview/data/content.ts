@@ -12,9 +12,10 @@ export const docLinks = [
 
 /* Connected website services, added as entry points beside the source links. */
 export const serviceLinks = [
-  { href: '/connections', label: 'Connections', internal: true },
   { href: '/agent', label: 'Agent', internal: true },
-  { href: `${BASE}media/index.html`, label: 'Media', internal: false },
+  { href: `${BASE}media/index.html?view=watch`, label: 'Watch', internal: false },
+  { href: `${BASE}media/index.html?view=music`, label: 'Music', internal: false },
+  { href: `${BASE}media/index.html?view=games`, label: 'Games', internal: false },
 ] as const;
 
 export const mediaViews = [

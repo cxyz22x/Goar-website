@@ -2,7 +2,7 @@ import "../../../services/storage.js";
 globalThis.fetchAny = async function fetchAny(url, opts={}, timeout=16000){
   const tryWisp=async()=>{
     const lc=music_getLibcurl();
-    if(!lc || typeof lc.fetch!=="function") return null;
+    if(!lc || typeof lc.fetch!=="function" || music_tunnelState.status==="bad") return null;
     return Promise.race([music_wispFetch(url,opts), new Promise((_,rej)=>setTimeout(()=>rej(new Error("wisp timeout")),timeout))]);
   };
   try{ const r=await tryWisp(); if(r) return r; }catch{}
@@ -10,21 +10,33 @@ globalThis.fetchAny = async function fetchAny(url, opts={}, timeout=16000){
   try{ return await fetch(url, Object.assign({},opts,{signal:ctrl.signal})); } finally{ clearTimeout(t); }
 }
 
-globalThis.state={ view:"home", tops:S.get("tops",TOP_SEED.slice()), news:S.get("news",NEW_SEED.slice()), list:S.list().length?S.list():TOP_SEED.slice(), i:0, playing:false, token:0, skip:0 };
+globalThis.state={ view:"home", viewHistory:[], shuffleHistory:[], tops:S.get("tops",TOP_SEED.slice()), news:S.get("news",NEW_SEED.slice()), list:S.list().length?S.list():TOP_SEED.slice(), i:0, playing:false, token:0, skip:0 };
 globalThis.media=music_musicQuery("#player");
 globalThis.engine={ hls:null, blob:null, kind:"" };
-media.volume=Math.max(0,Math.min(1,(S.prefs().vol||80)/100));
-music_musicQuery("#vol").value=S.prefs().vol||80;
+const initialVolume=Number(S.prefs().vol);
+media.volume=Math.max(0,Math.min(1,Number.isFinite(initialVolume)?initialVolume:80)/100);
+music_musicQuery("#vol").value=Number.isFinite(initialVolume)?Math.max(0,Math.min(100,initialVolume)):80;
 globalThis.current=()=>state.list[state.i]||null;
 globalThis.setStatus = function setStatus(msg){ const el=music_musicQuery("#playStatus"); if(el) el.textContent=msg; }
 
+globalThis.musicParseDuration = function musicParseDuration(value){
+  if(Number.isFinite(Number(value))&&Number(value)>0) return Number(value);
+  const parts=String(value||"").split(":").map(Number);
+  if(parts.length<2||parts.some(part=>!Number.isFinite(part))) return 0;
+  return parts.reduce((total,part)=>total*60+part,0);
+}
 globalThis.uniqSongs = function uniqSongs(items){
   const out=[], seen=new Set();
   (items||[]).forEach(it=>{
     if(!it) return;
     const id=parseVideoId(it.id||it.videoId||it.url||"")||(typeof it.videoId==="string"&&it.videoId.length===11?it.videoId:"");
     const title=it.title||it.name; if(!id||!title||seen.has(id)||String(id).length!==11) return;
-    seen.add(id); out.push({id,title,artist:String(it.artist||it.author||it.uploaderName||it.uploader||"YouTube").split("•")[0].trim()});
+    seen.add(id); out.push({
+      id,
+      title,
+      artist:String(it.artist||it.author||it.uploaderName||it.uploader||"YouTube").split("•")[0].trim(),
+      duration:musicParseDuration(it.durationSeconds??it.lengthSeconds??it.length_seconds??it.duration)
+    });
   });
   return out;
 }
@@ -82,6 +94,7 @@ globalThis.harvestPlayer = function harvestPlayer(j, into){
   const d=j.videoDetails||{};
   if(d.title) into.title=d.title;
   if(d.author) into.artist=d.author;
+  if(d.lengthSeconds) into.duration=musicParseDuration(d.lengthSeconds);
   const sd=j.streamingData||{};
   if(sd.hlsManifestUrl) into.hls=into.hls||sd.hlsManifestUrl;
   (sd.adaptiveFormats||[]).forEach(f=>{ if(f&&f.url) into.adaptive.push(f); });
@@ -137,6 +150,7 @@ globalThis.ytExtract = async function ytExtract(id){
   return bag;
 }
 globalThis.ytMusicSearch = async function ytMusicSearch(q){
+  globalThis.musicYoutubeSearchFailure="";
   const body={
     context:{ client:{ clientName:"WEB_REMIX", clientVersion:"1.20260804.16.00", hl:"en", gl:"US" } },
     query:q
@@ -147,7 +161,10 @@ globalThis.ytMusicSearch = async function ytMusicSearch(q){
       headers:{ "Content-Type":"application/json", "X-YouTube-Client-Name":"67", "X-YouTube-Client-Version":"1.20260804.16.00" },
       body:JSON.stringify(body)
     },18000);
-    if(!r||!r.ok) return [];
+    if(!r||!r.ok){
+      globalThis.musicYoutubeSearchFailure="HTTP "+(r&&r.status||"no response");
+      return [];
+    }
     const j=await r.json();
     const songs=[]; const seen=new Set();
     (function walk(n){
@@ -168,13 +185,17 @@ globalThis.ytMusicSearch = async function ytMusicSearch(q){
       Object.values(n).forEach(walk);
     })(j);
     return uniqSongs(songs);
-  }catch{ return []; }
+  }catch(error){
+    globalThis.musicYoutubeSearchFailure=error&&error.message?error.message:"request failed";
+    return [];
+  }
 }
 globalThis.music_resolveSources = async function music_resolveSources(id){
-  const cands=[]; let title="", artist="";
+  const cands=[]; let title="", artist="", duration=0;
   try{
     const bag=await ytExtract(id);
     title=bag.title||title; artist=bag.artist||artist;
+    duration=bag.duration||duration;
     bag.adaptive.filter(f=>/audio/i.test(f.mimeType||f.type||"")).sort((a,b)=>(b.bitrate||0)-(a.bitrate||0)).forEach(f=>pushCand(cands,f.url,f.mimeType||f.type,title,artist,true));
     bag.muxed.forEach(f=>pushCand(cands,f.url,f.mimeType||f.type,title,artist,false));
     if(bag.hls) pushCand(cands, bag.hls, "application/vnd.apple.mpegurl", title, artist, false);
@@ -182,6 +203,7 @@ globalThis.music_resolveSources = async function music_resolveSources(id){
   try{
     const j=await invGet("/api/v1/videos/"+encodeURIComponent(id)+"?region=US");
     title=j.title||title; artist=j.author||artist;
+    duration=musicParseDuration(j.lengthSeconds??j.length_seconds??j.duration)||duration;
     const adaptive=j.adaptiveFormats||[], muxed=j.formatStreams||[];
     adaptive.filter(f=>/audio/i.test(f.type||f.mimeType||"")&&f.url).sort((a,b)=>(b.bitrate||0)-(a.bitrate||0)).forEach(f=>pushCand(cands,f.url,f.type||f.mimeType,title,artist,true));
     muxed.filter(f=>f.url).forEach(f=>pushCand(cands,f.url,f.type||f.mimeType,title,artist,false));
@@ -192,6 +214,7 @@ globalThis.music_resolveSources = async function music_resolveSources(id){
       const r=await fetchAny(base+"/streams/"+id); if(!r||!r.ok) continue;
       const j=await r.json();
       title=j.title||title; artist=j.uploader||artist;
+      duration=musicParseDuration(j.duration)||duration;
       (j.audioStreams||[]).sort((a,b)=>(b.bitrate||0)-(a.bitrate||0)).forEach(f=>pushCand(cands,f.url,f.mimeType||f.codec,title,artist,true));
       if(j.hls) pushCand(cands, j.hls, "application/vnd.apple.mpegurl", title, artist, false);
       (j.videoStreams||[]).filter(f=>f.url).slice(0,2).forEach(f=>pushCand(cands,f.url,f.mimeType,title,artist,false));
@@ -204,8 +227,8 @@ globalThis.music_resolveSources = async function music_resolveSources(id){
     const rank=x=>x.audioOnly&&x.kind==="file"?0:x.kind==="file"?1:x.kind==="hls"?2:3;
     return rank(a)-rank(b);
   });
-  if(!out.length) throw new Error("no playable source");
-  out.forEach(c=>{ c.title=c.title||title; c.artist=c.artist||artist; });
+  if(!out.length) throw new Error("No playable audio source could be resolved. Public YouTube/Invidious/Piped sources may be unavailable or may block playback in this browser. Try again later or add an audio file from this device.");
+  out.forEach(c=>{ c.title=c.title||title; c.artist=c.artist||artist; c.duration=duration; });
   return out;
 }
 export class WispHlsLoader{

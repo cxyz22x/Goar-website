@@ -1,6 +1,9 @@
 import "../../../services/storage.js";
 globalThis.playerToken= 0;
 globalThis.playerState= { id:null, type:"movie", title:"", item:null, seasons:[], season:1, episode:1, sources:[], sourceName:null, hls:null };
+globalThis.playerRetryAction = null;
+globalThis.playerReturnFocus = null;
+let playerStatusTimer = 0;
 window.playerState = playerState;
 
 globalThis.VR_ORIGINS= ["https://vidrock.net", "https://vidrock.to"];
@@ -89,7 +92,6 @@ globalThis.decryptSourcesPayload = async function decryptSourcesPayload(payload)
       if (!format) format = /\.m3u8(\?|$)/i.test(url) ? "hls" : "mp4";
       sources.push({ name, url, format, language: row.language || "" });
     } catch(e){
-      console.warn("[goarxyz] skip source", name, e);
     }
   }
   return sources;
@@ -235,9 +237,39 @@ globalThis.resolveSources = async function resolveSources(id, type, season, epis
 globalThis.setPlayerStatus = function setPlayerStatus(html, isErr){
   const el = document.getElementById("playerStatus");
   if (!el) return;
-  if (!html){ el.classList.add("hide"); el.innerHTML = ""; return; }
+  clearTimeout(playerStatusTimer);
+  if (!html){
+    el.classList.add("hide");
+    el.replaceChildren();
+    el.style.pointerEvents = "none";
+    return;
+  }
   el.classList.remove("hide");
-  el.innerHTML = isErr ? ('<b>Couldn\'t play</b><span>' + html + '</span>') : ('<span>' + html + '</span>');
+  el.style.pointerEvents = isErr ? "auto" : "none";
+  el.replaceChildren();
+  const message = document.createElement("span");
+  message.textContent = String(html);
+  if (isErr) {
+    const heading = document.createElement("b");
+    heading.textContent = "Playback problem";
+    el.appendChild(heading);
+    el.setAttribute("role", "alert");
+    el.appendChild(message);
+    if (typeof playerRetryAction === "function") {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "btn btn-ghost";
+      retry.textContent = "Retry playback";
+      retry.onclick = () => playerRetryAction();
+      el.appendChild(retry);
+    }
+    return;
+  }
+  el.setAttribute("role", "status");
+  el.appendChild(message);
+  if (String(html).startsWith("Ready —")) {
+    playerStatusTimer = setTimeout(() => setPlayerStatus(""), 6000);
+  }
 }
 
 globalThis.destroyHls = function destroyHls(){
@@ -300,15 +332,17 @@ globalThis.playSource = async function playSource(source){
         try { video.currentTime = keep; } catch(e){}
       });
     }
-    setPlayerStatus(source.height ? (source.height + "p") : "");
-    try { await video.play(); } catch(e){}
+    setPlayerStatus("");
+    try { await video.play(); }
+    catch { setPlayerStatus("Ready — press Play on the video controls if playback did not start."); }
     return;
   }
   const canNative = video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl");
   if (canNative && !window.Hls){
     video.src = source.url;
     setPlayerStatus("");
-    try { await video.play(); } catch(e){}
+    try { await video.play(); }
+    catch { setPlayerStatus("Ready — press Play on the video controls if playback did not start."); }
     return;
   }
   if (typeof Hls === "undefined") throw new Error("hls.js missing");
@@ -339,7 +373,8 @@ globalThis.playSource = async function playSource(source){
     await attach(tunnelState.status === "ok" ? null : WispHlsLoader);
   }
   setPlayerStatus("");
-  try { await video.play(); } catch(e){}
+  try { await video.play(); }
+  catch { setPlayerStatus("Ready — press Play on the video controls if playback did not start."); }
 }
 
 globalThis.openPlayer = async function openPlayer(id, type, title, itemData){
@@ -356,7 +391,10 @@ globalThis.openPlayer = async function openPlayer(id, type, title, itemData){
   playerState.sourceName = null;
 
   const overlay = document.getElementById("playerOverlay");
+  if (!overlay.classList.contains("open")) globalThis.playerReturnFocus = document.activeElement;
   overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  playerRetryAction = () => openPlayer(id, type, title, itemData);
   document.body.style.overflow = "hidden";
   document.getElementById("playerTitle").textContent = title || "Now Playing";
   document.getElementById("playerTag").textContent = type === "movie" ? "MOVIE" : "TV";
@@ -371,6 +409,7 @@ globalThis.openPlayer = async function openPlayer(id, type, title, itemData){
     if (myToken !== playerToken) return;
     if (seasonNum) playerState.season = seasonNum;
     if (episodeNum) playerState.episode = episodeNum;
+    playerRetryAction = () => loadEpisode(playerState.season, playerState.episode);
     setPlayerStatus("Connecting player…");
     destroyHls();
     try {
@@ -428,13 +467,12 @@ globalThis.openPlayer = async function openPlayer(id, type, title, itemData){
           break;
         } catch(e){
           lastErr = e;
-          console.warn("[goarxyz] source failed", src.name, e);
         }
       }
       if (lastErr) throw lastErr;
     } catch(e){
-      console.error("[goarxyz] player", e);
-      setPlayerStatus(String(e && e.message ? e.message : e), true);
+      const detail = String(e && e.message ? e.message : e).replace(/([?&](?:api_key|key|token|password|secret|auth)=)[^&\s]+/gi, "$1[redacted]");
+      setPlayerStatus("Could not start playback: " + detail, true);
     }
   }
 
@@ -458,12 +496,22 @@ globalThis.closePlayer = function closePlayer(){
   playerToken++;
   destroyHls();
   setPlayerStatus("");
-  document.getElementById("playerOverlay").classList.remove("open");
+  playerRetryAction = null;
+  const overlay = document.getElementById("playerOverlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
   document.getElementById("playerPicker").innerHTML = "";
   document.body.style.overflow = "";
   if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  if (globalThis.playerReturnFocus && globalThis.playerReturnFocus.isConnected) globalThis.playerReturnFocus.focus();
+  globalThis.playerReturnFocus = null;
 }
 document.getElementById("playerClose").onclick = closePlayer;
+document.getElementById("playerVideo").addEventListener("error", () => {
+  if (document.getElementById("playerOverlay").classList.contains("open") && document.getElementById("playerVideo").currentSrc) {
+    setPlayerStatus("The selected stream stopped or could not be decoded. Choose another server or retry.", true);
+  }
+});
 
 /* ================= HERO ================= */
 

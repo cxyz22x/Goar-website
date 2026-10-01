@@ -15,6 +15,11 @@ globalThis.esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;","
 globalThis.phArt="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="8" fill="#17171e"/><text x="40" y="46" text-anchor="middle" fill="#c084fc" font-size="18" font-family="sans-serif">♪</text></svg>');
 globalThis.thumb=id=>String(id).startsWith("local_")?phArt:"https://i.ytimg.com/vi/"+id+"/hqdefault.jpg";
 globalThis.maxart=id=>String(id).startsWith("local_")?phArt:"https://i.ytimg.com/vi/"+id+"/maxresdefault.jpg";
-globalThis.fmt=s=>{s=Math.max(0,Math.floor(s||0)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");};
+globalThis.fmt=s=>{
+  s=Math.max(0,Math.floor(s||0));
+  const seconds=String(s%60).padStart(2,"0");
+  const minutes=Math.floor(s/60);
+  return minutes>=60?Math.floor(minutes/60)+":"+String(minutes%60).padStart(2,"0")+":"+seconds:minutes+":"+seconds;
+};
 globalThis.music_toast = function music_toast(msg){ music_musicQueryAll(".toast").forEach(t=>t.remove()); const t=document.createElement("div"); t.className="toast"; t.textContent=msg; music_MUSIC_ROOT.appendChild(t); setTimeout(()=>t.remove(),2400); }
 

@@ -1,10 +1,25 @@
 import "../../../services/storage.js";
 globalThis.searchSongs = async function searchSongs(q){
-  try{ const rows=uniqSongs(await invGet("/api/v1/search?type=video&region=US&q="+encodeURIComponent(q))); if(rows.length) return rows.slice(0,24); }catch{}
+  let responded=false;
+  const failures=[];
+  try{
+    const rows=uniqSongs(await invGet("/api/v1/search?type=video&region=US&q="+encodeURIComponent(q)));
+    responded=true;
+    if(rows.length) return rows.slice(0,24);
+  }catch(error){ failures.push("Invidious: "+(error.message||"request failed")); }
   const yt=await ytMusicSearch(q); if(yt.length) return yt.slice(0,24);
+  if(globalThis.musicYoutubeSearchFailure) failures.push("YouTube Music: "+musicYoutubeSearchFailure);
   for(const base of PIPED){
-    try{ const r=await fetchAny(base+"/search?q="+encodeURIComponent(q)+"&filter=videos"); if(!r||!r.ok) continue; const j=await r.json(); const rows=uniqSongs(Array.isArray(j)?j:(j.items||[])); if(rows.length) return rows.slice(0,24); }catch{}
+    try{
+      const r=await fetchAny(base+"/search?q="+encodeURIComponent(q)+"&filter=videos");
+      if(!r||!r.ok){ failures.push("Piped search HTTP "+(r&&r.status||"no response")); continue; }
+      responded=true;
+      const j=await r.json();
+      const rows=uniqSongs(Array.isArray(j)?j:(j.items||[]));
+      if(rows.length) return rows.slice(0,24);
+    }catch(error){ failures.push("Piped: "+(error.message||"request failed")); }
   }
+  if(!responded) throw new Error("External music catalogs could not be reached. "+(failures[0]||"The catalog request failed.")+" Public provider availability varies; try again later or add a local audio file.");
   return [];
 }
 globalThis.loadLiveCatalog = async function loadLiveCatalog(){

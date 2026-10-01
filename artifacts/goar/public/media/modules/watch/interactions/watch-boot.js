@@ -18,8 +18,8 @@ window.tmdb = tmdb;
 
 buildWispSelect();
 setTimeout(() => {
-  ensureLibcurl().then(() => buildWispSelect()).catch(e => {
-    console.warn("WISP warm-up failed:", e && e.message ? e.message : e);
+  ensureLibcurl().then(() => buildWispSelect()).catch(() => {
+    setTunnelChip("bad", "Relay unavailable · Retry");
     buildWispSelect();
   });
 }, 200);

@@ -1,12 +1,12 @@
 
 
   :root{
-    --bg:#0a0a0d; --bg-elev:#111116; --card:#17171e; --card-hover:#1e1e27; --line:#232330;
-    --text:#eceef1; --muted:#8b8c98;
-    --accent:#ffc53d; --accent2:#4d8dff; --accent3:#ff4d6d; --accent4:#2ee6a6;
-    --accent-music:#e14dff; --accent-kids:#ff7ad9;
-    --p-color:#e50914; --p-bg:#2b0405; --p-bg2:#0d0202; --p-accent:#ff4d4d;
-    --cta:#ffffff; --cta-text:#0a0a0d; --rank:#ffffff;
+    --bg:#efe9df; --bg-elev:#f4efe6; --card:#e4ddd2; --card-hover:#dbd3c7; --line:#c9c0b3;
+    --text:#000000; --muted:#625d55;
+    --accent:#171715; --accent2:#395d70; --accent3:#9b5148; --accent4:#4f7552;
+    --accent-music:#395d70; --accent-kids:#78916c;
+    --p-color:#8e3237; --p-bg:#e4ddd2; --p-bg2:#f4efe6; --p-accent:#a34442;
+    --cta:#111110; --cta-text:#efe9df; --rank:#111110;
     --ease:cubic-bezier(.22,1,.36,1);
     --ease-spring:cubic-bezier(.34,1.56,.64,1);
   }
@@ -155,7 +155,7 @@
   .cast-name{font-size:11.5px; font-weight:600; margin-top:8px; text-align:center; line-height:1.25;}
   .cast-role{font-size:10.5px; color:var(--muted); text-align:center; margin-top:2px;}
   .mini-card{flex:0 0 auto; width:120px; cursor:pointer;}
-  .mini-card .mc-img{aspect-ratio:2/3; border-radius:10px; overflow:hidden; background:var(--card); position:relative;}
+  .mini-card .mc-img{display:block; aspect-ratio:2/3; border-radius:10px; overflow:hidden; background:var(--card); position:relative;}
   .mini-card .mc-img img{width:100%; height:100%; object-fit:cover;}
   .mini-card .mc-rating{position:absolute; top:6px; left:6px; background:rgba(10,10,13,.75); color:var(--accent); font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px;}
   .mini-card .mc-title{font-size:11.5px; font-weight:600; margin-top:7px; line-height:1.3;}
@@ -194,7 +194,7 @@
   footer{padding:50px 5vw 20px; color:var(--muted); font-size:12px; line-height:1.7; border-top:1px solid var(--line); margin-top:40px;}
   footer b{color:var(--text);}
 
-  .tunnel-chip{display:none !important;}
+  .tunnel-chip{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; min-height:32px;}
   .tunnel-chip .dot{width:7px; height:7px; border-radius:50%; background:#8b8c98; flex-shrink:0;}
   .tunnel-chip.ok .dot{background:var(--accent4);} .tunnel-chip.bad .dot{background:var(--accent3);} .tunnel-chip.busy .dot{background:var(--accent); animation:fade 1s infinite alternate;}
   .tunnel-chip select,.tunnel-chip input{background:transparent; color:var(--text); border:0; outline:none; font-size:11px; max-width:160px; font-family:inherit;}

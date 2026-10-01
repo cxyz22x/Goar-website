@@ -1,6 +1,18 @@
-.g header{position:sticky;top:0;z-index:8;background:#0b0c0bf2;display:flex;align-items:center;justify-content:space-between;padding:18px var(--pad);border-bottom:1px solid var(--line);gap:20px}
-.g .brand{font-weight:800;font-size:22px;letter-spacing:-1px}
-.g .nav{display:flex;flex-wrap:wrap;gap:25px;font-size:13px;color:var(--muted)}
-.g footer{border-top:1px solid var(--line);padding:28px var(--pad);display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;font-size:12px;color:var(--muted)}
-.g .footer-links{display:flex;flex-wrap:wrap;gap:22px}
-@media(max-width:850px){.g .nav{gap:15px}}
+.g header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.g .header-inner{display:flex;align-items:center;gap:1rem;min-height:64px;padding:0 var(--pad);max-width:1280px;margin:0 auto}
+.g .brand{font-weight:700;font-size:1.15rem;letter-spacing:-.04em;text-decoration:none;padding:.5rem 0}
+.g .nav{display:flex;align-items:center;gap:.15rem;margin-left:auto;font-size:.9rem}
+.g .nav a{padding:.55rem .85rem;border-radius:999px;text-decoration:none;color:var(--muted);min-height:44px;display:inline-flex;align-items:center}
+.g .nav a:hover,.g .nav a[aria-current=page]{background:var(--panel);color:var(--text)}
+.g .nav-toggle{display:none;margin-left:auto;min-height:44px;padding:0 1.1rem;border-radius:999px;border:1px solid var(--line);background:transparent}
+.g footer{border-top:1px solid var(--line);padding:1.8rem var(--pad);display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem 2rem;font-size:.85rem;color:var(--muted);background:var(--bg-lift)}
+.g footer a{text-decoration:underline;text-underline-offset:3px;display:inline-block;padding:.2rem 0}
+.g .footer-links{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem}
+.g .backlink{display:inline-flex;align-items:center;min-height:44px;margin:0 0 1.5rem;font-size:.9rem;color:var(--muted);text-decoration:none}
+.g .backlink:hover{color:var(--text);text-decoration:underline}
+@media(max-width:760px){
+.g .nav-toggle{display:inline-flex;align-items:center}
+.g .nav{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;gap:0;background:var(--bg);border-bottom:1px solid var(--line);padding:.5rem var(--pad) 1rem}
+.g header.open .nav{display:flex}
+.g .nav a{border-radius:var(--radius-sm);padding:.8rem 1rem}
+}

@@ -108,6 +108,31 @@ try {
   } else for (const path of process.argv.includes("--wrapper-only") ? ["/agent"] : ["/workspace/index.html", "/agent"]) {
     await command("Page.navigate", { url: `${origin}${path}` });
     const documentExpression = path === "/agent" ? "document.querySelector('iframe')?.contentDocument" : "document";
+    const sourceControlVisible = async id => evaluate(`(() => {
+      const d=${documentExpression}, el=d?.getElementById(${JSON.stringify(id)});
+      if(!el || el.hidden || el.closest('[hidden],[aria-hidden="true"]')) return false;
+      const style=d.defaultView.getComputedStyle(el);
+      return el.getClientRects().length>0 && style.display!=='none' && style.visibility!=='hidden';
+    })()`);
+    const waitForSourceControl = async (id, timeout = 3000) => {
+      const deadline = Date.now() + timeout;
+      while (Date.now() < deadline) {
+        if (await sourceControlVisible(id)) return true;
+        await sleep(75);
+      }
+      return sourceControlVisible(id);
+    };
+    const clickSourceControl = async (id, timeout = 3000) => {
+      if (!await waitForSourceControl(id, timeout)) return false;
+      return evaluate(`(() => {
+        const d=${documentExpression}, el=d?.getElementById(${JSON.stringify(id)});
+        if(!el || el.hidden || el.closest('[hidden],[aria-hidden="true"]') || !el.getClientRects().length) return false;
+        const style=d.defaultView.getComputedStyle(el);
+        if(style.display==='none' || style.visibility==='hidden') return false;
+        el.click();
+        return true;
+      })()`);
+    };
     let status;
     for (let n = 0; n < 45; n++) {
       await sleep(1000);
@@ -132,18 +157,37 @@ try {
     }
     if (process.argv.includes("--preset")) {
       // Exercise the supplied UI's preset, without reading its credential values.
-      await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btn-top-settings')?.click();})()`);
-      await sleep(300);
-      await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btnSshDefault')?.click();})()`);
-      await sleep(300);
-      await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btnSaveSettings')?.click();})()`);
-      await sleep(1000);
-      await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btnCloseSettings')?.click();})()`);
+      for (const id of ["btn-top-settings", "btnSshDefault", "btnSaveSettings"]) {
+        if (!await clickSourceControl(id)) throw new Error(`The supplied agent did not expose ${id} in time.`);
+        if (id === "btn-top-settings" && !await waitForSourceControl("btnSshDefault")) {
+          throw new Error("Settings opened, but the default SSH preset did not become visible.");
+        }
+        if (id === "btnSshDefault" && !await waitForSourceControl("btnSaveSettings")) {
+          throw new Error("The default SSH preset was clicked, but Save did not become available.");
+        }
+      }
+      const settingsClosed = await (async () => {
+        const deadline = Date.now() + 1000;
+        while (Date.now() < deadline) {
+          if (!await sourceControlVisible("settings")) return true;
+          await sleep(75);
+        }
+        return !await sourceControlVisible("settings");
+      })();
+      if (!settingsClosed && await sourceControlVisible("settings")) {
+        const closed = await clickSourceControl("btnCloseSettings", 500)
+          || await clickSourceControl("btnCloseSettingsTop", 500);
+        if (!closed && await sourceControlVisible("settings")) {
+          throw new Error("The SSH preset was saved, but the Settings panel could not be closed.");
+        }
+      }
     }
-    await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btn-top-term')?.click();})()`);
-    await sleep(2000);
+    if (!await sourceControlVisible("term-tab") && !await clickSourceControl("btn-top-term")) {
+      throw new Error("The Terminal control did not become visible.");
+    }
+    if (!await waitForSourceControl("term-tab")) throw new Error("The supplied Terminal did not open.");
     // Select the supplied SSH connection instead of misreporting the local shell.
-    await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btn-term-ssh')?.click();})()`);
+    const sshControlAvailable = await clickSourceControl("btn-term-ssh");
     await sleep(12000);
     const result = await evaluate(`(() => {
       const d=${documentExpression};
@@ -161,34 +205,50 @@ try {
         wrapper: ${path === "/agent" ? "document.querySelector('.agent-status')?.textContent?.trim().slice(0,400)" : "null"}
       };
     })()`);
-    console.log(JSON.stringify({ path, stage: "ssh-status", ...result }));
+    console.log(JSON.stringify({ path, stage: "ssh-status", sshControlAvailable, ...result }));
     if (result.terminal === "Connected · ssh" && process.argv.includes("--pwd")) {
-      const before = await evaluate(`(() => {const d=${documentExpression};return (d?.getElementById('term-stage')?.innerText||'').includes('/root');})()`);
-      await evaluate(`(() => {
+      const accessibilityReady = await evaluate(`(() => {
+        const d=${documentExpression};
+        const live=d?.querySelector('#term-stage .xterm-accessibility .live-region[aria-live="assertive"]');
+        if(!live)return false;
+        live.textContent='';
+        return true;
+      })()`);
+      if (!accessibilityReady) {
+        console.log(JSON.stringify({
+          path, stage: "remote-pwd", verified: false,
+          limitation: "xterm did not expose its supported accessibility live region; no terminal text was read",
+        }));
+      } else {
+        await evaluate(`(() => {
         const d=${documentExpression};d?.defaultView?.focus();
         const stage=d?.getElementById('term-stage');
-        const input=stage?.querySelector('textarea,input,[contenteditable=true],[tabindex]')||d?.getElementById('kb');
+        const input=stage?.querySelector('.xterm-helper-textarea')||stage?.querySelector('textarea,input,[contenteditable=true],[tabindex]')||d?.getElementById('kb');
         input?.focus();
       })()`);
-      for (const key of "pwd") {
-        await command("Input.dispatchKeyEvent", { type: "keyDown", key, code: `Key${key.toUpperCase()}`, text: key, unmodifiedText: key, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) });
-        await command("Input.dispatchKeyEvent", { type: "keyUp", key, code: `Key${key.toUpperCase()}` });
+        for (const key of "pwd") {
+          await command("Input.dispatchKeyEvent", { type: "keyDown", key, code: `Key${key.toUpperCase()}`, text: key, unmodifiedText: key, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) });
+          await command("Input.dispatchKeyEvent", { type: "keyUp", key, code: `Key${key.toUpperCase()}` });
+        }
+        await command("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13, text: "\r" });
+        await command("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+        let pwdReturned = false;
+        for (let attempt = 0; attempt < 20 && !pwdReturned; attempt++) {
+          await sleep(250);
+          pwdReturned = await evaluate(`(() => {
+            const d=${documentExpression};
+            const live=d?.querySelector('#term-stage .xterm-accessibility .live-region[aria-live="assertive"]');
+            const freshText=live?.textContent||'';
+            const commandIndex=freshText.lastIndexOf('pwd');
+            if(commandIndex<0)return false;
+            return /(?:^|[\\r\\n])\\s*\\/[a-zA-Z0-9._/-]{1,180}(?=$|[\\r\\n\\s])/.test(freshText.slice(commandIndex+3));
+          })()`);
+        }
+        console.log(JSON.stringify({
+          path, stage: "remote-pwd", verified: pwdReturned,
+          method: "xterm accessibility live region cleared after SSH connection; only fresh pwd output inspected",
+        }));
       }
-      await command("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13, text: "\r" });
-      await command("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
-      await sleep(4000);
-      const pwdReturned = await evaluate(`(() => {
-        const d=${documentExpression};
-        const stage=d?.getElementById('term-stage');
-        return {
-          directoryReturned:/^\\s*\\/(?:[^\\r\\n]+)?\\s*$/m.test(stage?.innerText||''),
-          hasPwd:(stage?.innerText||'').includes('pwd'),
-          textLength:(stage?.innerText||'').length,
-          tags:Array.from(stage?.querySelectorAll('textarea,input,canvas,[tabindex]')||[]).map(el=>({tag:el.tagName,id:el.id,class:el.className})),
-          focus:d?.activeElement?.id||d?.activeElement?.tagName,
-        };
-      })()`);
-      console.log(JSON.stringify({ path, stage: "remote-pwd", before, ...pwdReturned }));
       await evaluate(`(() => {const d=${documentExpression};d?.getElementById('btn-term-disconnect')?.click();})()`);
     }
     if (process.argv.includes("--chat") && result.ready) {

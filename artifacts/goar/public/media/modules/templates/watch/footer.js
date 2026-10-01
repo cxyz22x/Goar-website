@@ -1,1 +1,1 @@
-export const watchFooter = "<footer>\n  <b>goarxyz</b> indexes live metadata from The Movie Database (TMDB). This site does not host, store, or stream any video files. Not affiliated with or endorsed by TMDB or any streaming service.\n</footer>";
+export const watchFooter = "<footer>\n  <b>Media catalogue</b> indexes live metadata from The Movie Database (TMDB). This site does not host, store, or stream any video files. Not affiliated with or endorsed by TMDB or any streaming service.\n</footer>";

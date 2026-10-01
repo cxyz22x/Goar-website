@@ -133,3 +133,122 @@ html,body{height:100%;margin:0;background:#07070c;color:#f4f6fb;font-family:Inte
 #view-watch header{position:relative;top:auto}
 #goar-site-nav{display:none !important}
 #pillNav,.pill-nav{display:none!important}
+
+/* Music adopts the supplied Goar paper-and-ink identity. */
+#view-music{
+  --bg:#efe9df;
+  --bg-elev:#f4efe6;
+  --card:#e4ddd2;
+  --card-hover:#ddd5c9;
+  --line:#c9c0b3;
+  --text:#0d0d0d;
+  --muted:#4f4b44;
+  --accent:#0d0d0d;
+  --accent2:#4f612e;
+  --accent3:#55594c;
+  --accent4:#4f612e;
+  --music:#4f612e;
+  --music-2:#4f612e;
+  --music-dim:rgba(79,97,46,.12);
+  --cta:#0d0d0d;
+  --cta-text:#efe9df;
+  --ease:cubic-bezier(.22,1,.36,1);
+  color:var(--text);
+  background:var(--bg);
+  font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+}
+body #view-music.on{
+  display:grid;
+  grid-template-columns:var(--side) minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) var(--bar);
+  height:calc(100dvh - 120px);
+  min-height:0;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+}
+#view-music .sidebar{background:var(--bg);color:var(--text)}
+#view-music .side-card{background:var(--bg-elev);border-color:var(--line)}
+#view-music .logo{color:var(--text)!important;font-family:"Segoe UI",system-ui,sans-serif}
+#view-music .logo .marks span{color:var(--accent2)}
+#view-music .nav-btn:hover,#view-music .nav-btn.on{color:var(--text);background:var(--card)}
+#view-music .lib-head button{background:var(--card);border-color:var(--line);color:var(--text)}
+#view-music .lib-item:hover,#view-music .lib-item.on{background:var(--card)}
+#view-music .lib-item{width:100%;border:0;background:transparent;color:var(--text);text-align:left;font:inherit}
+#view-music .lib-track{min-width:0}
+#view-music .lib-item img,#view-music .t-art,#view-music .now img{background:var(--bg-elev)}
+#view-music .stage{background:linear-gradient(180deg,#e4ddd2 0%,var(--bg) 360px);color:var(--text)}
+#view-music .topbar{background:linear-gradient(#efe9dff2,#efe9df00)}
+#view-music .circle{background:#f4efe6;border-color:var(--line);color:var(--text)}
+#view-music .search input{background:#f4efe6;border-color:var(--line);color:var(--text)}
+#view-music .search input:focus{border-color:var(--accent2)}
+#view-music .hero-art{background:var(--card);box-shadow:0 14px 36px rgba(13,13,13,.12)}
+#view-music .library-art{display:grid;place-items:center;font-size:64px;color:var(--accent2)}
+#view-music .kicker{color:var(--accent2)}
+#view-music .hero h1,#view-music .section-head h2{font-family:"Segoe UI",system-ui,sans-serif;letter-spacing:-.045em}
+#view-music .np-meta h2{font-family:"Segoe UI",system-ui,sans-serif;letter-spacing:-.04em}
+#view-music .hero p{color:var(--muted)}
+#view-music .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+#view-music .btn-play{background:var(--cta);color:var(--cta-text)}
+#view-music .btn-ghost{background:transparent;border-color:var(--line);color:var(--text)}
+#view-music .section-head .see{border:0;background:transparent;color:var(--accent2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+#view-music .album{background:var(--bg-elev);border:1px solid var(--line)}
+#view-music .album:hover{background:var(--card)}
+#view-music .album img{background:var(--card)}
+#view-music .tracks th,#view-music .tracks td{border-color:var(--line)}
+#view-music .tracks tr:hover td{background:rgba(79,97,46,.06)}
+#view-music .tracks tr.on td{background:var(--music-dim)}
+#view-music .tracks tr:focus-visible,#view-music .album:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+#view-music .track-name{display:flex;gap:10px;align-items:center}
+#view-music .duration{width:86px;color:var(--muted);font-variant-numeric:tabular-nums}
+#view-music .add{background:var(--bg-elev);border-color:var(--line);color:var(--text)}
+#view-music .dock{background:var(--bg-elev);border-color:var(--line);color:var(--text)}
+#view-music .now{width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
+#view-music .now-meta{display:block;min-width:0}
+#view-music .ctrl{color:var(--muted)}
+#view-music .ctrl:hover,#view-music .ctrl.on{color:var(--accent2)}
+#view-music .play{background:var(--cta);color:var(--cta-text)}
+#view-music input[type=range]{accent-color:var(--accent2)}
+#view-music input[type=range]::-webkit-slider-thumb{background:var(--accent2)}
+#view-music input[type=range]::-moz-range-thumb{border:0;border-radius:50%;background:var(--accent2);width:12px;height:12px}
+#view-music .volume-control{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}
+#view-music .volume-control input{width:90px}
+#view-music .expand{background:var(--bg-elev);border-color:var(--line);color:var(--text)}
+#view-music .np{background:var(--bg);color:var(--text)}
+#view-music .np-bg{opacity:.2;filter:blur(45px) saturate(.75)}
+#view-music .np-bg::after{background:linear-gradient(180deg,rgba(239,233,223,.94),rgba(239,233,223,.9) 48%,#efe9df)}
+#view-music .np-top button{background:var(--bg-elev);border-color:var(--line);color:var(--text)}
+#view-music .np-meta p{color:var(--muted)}
+#view-music .np-art{background:var(--card);box-shadow:0 24px 55px rgba(13,13,13,.2)}
+#view-music .np-queue{background:rgba(244,239,230,.88);border-color:var(--line)}
+#view-music .np-qrow{width:100%;border:0;background:transparent;color:var(--text);text-align:left;font:inherit}
+#view-music .np-qrow:hover,#view-music .np-qrow.on{background:var(--music-dim)}
+#view-music .np-qrow img{background:var(--card)}
+#view-music .queue-empty{padding:14px;color:var(--muted)}
+#view-music .np-foot{background:linear-gradient(transparent,rgba(239,233,223,.94) 22%)}
+#view-music .toast{background:var(--bg-elev);border-color:var(--line);color:var(--text);box-shadow:0 8px 30px rgba(13,13,13,.14)}
+#view-music .empty{color:var(--muted)}
+#view-music button:focus-visible,#view-music input:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+body.np-open #view-music .sidebar,body.np-open #view-music .stage,body.np-open #view-music .dock,body.np-open #view-music .mnav{visibility:hidden}
+@media(max-width:980px){
+  body #view-music.on{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) var(--bar) 56px;height:calc(100dvh - 120px)}
+  #view-music .mnav{background:var(--bg-elev);border-color:var(--line)}
+  #view-music .mnav button{color:var(--muted)}
+  #view-music .mnav button.on{color:var(--text)}
+  #view-music .np-body{gap:18px;padding-inline:5vw}
+  #view-music .np-queue{max-height:28vh}
+}
+@media(max-width:560px){
+  #view-music .page{padding-inline:18px}
+  #view-music .topbar{padding-inline:16px}
+  #view-music .duration{width:52px}
+  #view-music .tracks th,#view-music .tracks td{padding:8px 6px}
+  #view-music .dock{padding-inline:10px;gap:5px}
+  #view-music .now img{width:48px;height:48px}
+  #view-music .ctrl-row{gap:4px}
+  #view-music .ctrl{width:30px}
+  #view-music .np-top{padding-inline:14px}
+  #view-music .np-body{padding-inline:14px}
+  #view-music .np-art{width:min(76vw,360px)}
+  #view-music .np-foot{padding-inline:18px}
+}

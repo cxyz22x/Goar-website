@@ -209,7 +209,6 @@ globalThis.ensureLibcurl = async function ensureLibcurl(force){
     }
 
     const urls = loadSavedWispList();
-    let lastErr = null;
     for (const url of urls){
       setTunnelChip("busy", "wisp…");
       try {
@@ -220,15 +219,12 @@ globalThis.ensureLibcurl = async function ensureLibcurl(force){
         tunnelState.error = "";
         window.libcurl = lc;
         return lc;
-      } catch(e){
-        lastErr = e;
-        console.warn("[goarxyz] WISP probe failed:", url, e);
-      }
+      } catch {}
     }
     // Keep last URL applied so a later retry / custom URL can still work
     applyWispUrl(lc, urls[0]);
-    setTunnelChip("bad", "wisp down");
-    tunnelState.error = lastErr && lastErr.message ? lastErr.message : String(lastErr || "all WISP endpoints failed");
+    setTunnelChip("bad", "Relay unavailable · Retry");
+    tunnelState.error = "Relay probe failed. Check the selected endpoint or retry.";
     window.libcurl = lc;
     return lc;
   })();
@@ -236,8 +232,8 @@ globalThis.ensureLibcurl = async function ensureLibcurl(force){
     return await _libcurlReady;
   } catch(e){
     _libcurlReady = null;
-    setTunnelChip("bad", "libcurl fail");
-    tunnelState.error = e && e.message ? e.message : String(e);
+    setTunnelChip("bad", "Relay unavailable · Retry");
+    tunnelState.error = "Relay library or connection could not start.";
     throw e;
   }
 }
@@ -284,9 +280,9 @@ globalThis.buildWispSelect = function buildWispSelect(){
       await probeTunnel(lc);
       setTunnelChip("ok", "wisp");
       toast("WISP connected");
-    } catch(e){
-      setTunnelChip("bad", "wisp down");
-      toast("WISP failed: " + (e.message || e));
+    } catch {
+      setTunnelChip("bad", "Relay unavailable · Retry");
+      toast("Relay connection failed. Check the endpoint and retry.");
     }
     sel._hooked = false;
     buildWispSelect();
@@ -298,7 +294,7 @@ globalThis.buildWispSelect = function buildWispSelect(){
       resetHttpSession();
       _libcurlReady = null;
       try { await ensureLibcurl(true); toast("Tunnel ready"); }
-      catch(e){ toast("Tunnel failed: " + (e.message || e)); }
+      catch { toast("Relay connection failed. Check the endpoint and retry."); }
     };
   }
   sel._hooked = true;

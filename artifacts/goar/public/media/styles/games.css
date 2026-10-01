@@ -19,3 +19,57 @@ body.playing-game #app-dock,body.playing-game #app-shell{display:none}
 .home-tiles{grid-template-columns:1.35fr 1fr 1fr}
 .home-tile.movies{grid-row:span 2;min-height:320px}
 #app-dock{margin:0 12px 10px;border:1px solid #ffffff14;border-radius:22px;position:sticky}
+
+/* Games library and player */
+#view-games{--games-paper:#efe9df;--games-paper-lift:#f4efe6;--games-panel:#e4ddd2;--games-line:#c9c0b3;--games-ink:#000;--games-dim:rgba(0,0,0,.62);position:relative;min-height:calc(100dvh - 120px);background:linear-gradient(155deg,var(--games-paper-lift),var(--games-paper) 55%,var(--games-paper-lift));color:var(--games-ink);font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;padding-bottom:42px}
+#gamePlay{--games-paper:#efe9df;--games-paper-lift:#f4efe6;--games-panel:#e4ddd2;--games-line:#c9c0b3;--games-ink:#000;--games-dim:rgba(0,0,0,.62);font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
+#gamePlay #gameStatus{color:var(--games-dim)}
+#gamePlay #gameFrame{background:var(--games-paper-lift)}
+#view-games .game-library-head{max-width:1120px;margin:0 auto;padding:clamp(32px,6vw,66px) 4vw 22px}
+#view-games .game-kicker{margin:0 0 8px;color:var(--games-dim);font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+#view-games #gameLibraryTitle{margin:0;color:var(--games-ink);font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;font-size:clamp(34px,5vw,56px);letter-spacing:-.045em;line-height:1.05}
+#view-games .game-library-copy{max-width:64ch;margin:14px 0;color:var(--games-dim);font-size:14px;line-height:1.6}
+#view-games .game-count{margin:12px 0 0;color:var(--games-dim);font-size:12px;font-weight:650}
+body #view-games .gbar{position:sticky;top:0;z-index:5;display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:14px 4vw;background:rgba(244,239,230,.96);backdrop-filter:blur(14px);border-block:1px solid var(--games-line)}
+#view-games .game-search-label{font-size:12px;font-weight:750;color:var(--games-ink)}
+body #view-games .gbar input{flex:1;min-width:min(100%,240px);background:var(--games-paper-lift);border:1px solid var(--games-line);color:var(--games-ink);border-radius:12px;padding:12px 14px;font:500 14px "Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;outline:none}
+#view-games .gbar input::placeholder{color:var(--games-dim)}
+#view-games .gbar input:focus-visible{border-color:var(--games-ink);box-shadow:0 0 0 3px rgba(0,0,0,.12)}
+.gchips{display:flex;gap:7px;flex-wrap:wrap}
+.gchip{border:1px solid var(--games-line);background:var(--games-paper-lift);color:var(--games-ink);border-radius:999px;padding:8px 11px;font:700 12px "Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer}
+.gchip span{margin-left:4px;color:var(--games-dim);font-size:10px}
+body #view-games .gchip.on{color:var(--games-paper-lift);background:var(--games-ink);border-color:var(--games-ink)}
+body #view-games .gchip.on span{color:var(--games-paper-lift)}
+#view-games .ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px;padding:20px 4vw 44px;max-width:1600px;margin:0 auto}
+#view-games .ggrid > button.game-card{background:var(--games-panel);border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid var(--games-line);text-align:left;padding:0;color:var(--games-ink);font:inherit;display:block;width:100%;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+#view-games .ggrid > button.game-card:hover{transform:translateY(-3px);border-color:var(--games-ink);box-shadow:0 10px 24px rgba(0,0,0,.12)}
+#view-games .ggrid > button.game-card:focus-visible,#view-games .gchip:focus-visible,#gamePlay button:focus-visible,#gamePlay a:focus-visible{outline:3px solid var(--games-ink);outline-offset:3px}
+#view-games .ggrid > button.game-card:disabled{cursor:not-allowed;opacity:.62}
+#view-games .ggrid > button.game-card img,#view-games .game-cover-fallback{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:linear-gradient(135deg,var(--games-paper-lift),var(--games-panel));color:var(--games-ink)}
+#view-games .game-cover-fallback{display:grid;place-items:center;font-family:"Segoe UI",system-ui,sans-serif;font-weight:800;letter-spacing:.25em}
+#view-games .game-card-info{display:block;padding:10px 11px 11px}
+#view-games .game-card-info b{display:block;padding:0;font-size:13px;font-weight:750;line-height:1.35}
+#view-games .game-card-description{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:34px;margin-top:5px;color:var(--games-dim);font-size:11px;line-height:1.5}
+#view-games .game-card-category{display:block;margin-top:8px;color:var(--games-ink);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
+#view-games .gempty{grid-column:1/-1;color:var(--games-dim);padding:24px 4px}
+#gamePlay{position:fixed;inset:0;z-index:400;background:#efe9df;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);overscroll-behavior:contain}
+#gamePlay[hidden]{display:none!important}
+#gamePlay .gp-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--games-panel);color:var(--games-ink);border-bottom:1px solid var(--games-line);min-height:58px}
+#gameBack,#gameRetry,#gameFullscreen,#gameStandalone{background:var(--games-ink);color:var(--games-paper-lift);border:1px solid var(--games-ink);border-radius:999px;padding:8px 12px;font:750 12px "Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;text-decoration:none;white-space:nowrap}
+#gameBack{background:var(--games-ink);color:var(--games-paper-lift);border-color:var(--games-ink);font-weight:850}
+#gameStandalone{background:var(--games-paper-lift);border-color:var(--games-ink);color:var(--games-ink)}
+#gameRetry:hover,#gameFullscreen:hover,#gameStandalone:hover{opacity:.8}
+@media(max-width:720px){
+  #view-games .game-library-head{padding:28px 20px 18px}
+  body #view-games .gbar{position:relative;padding:12px 20px}
+  #view-games .game-search-label{width:100%}
+  body #view-games .gbar input{flex-basis:100%}
+  #view-games .gchips{width:100%;gap:6px}
+  #view-games .gchip{padding:8px 10px}
+  #view-games .ggrid{grid-template-columns:repeat(auto-fill,minmax(min(42vw,170px),1fr));gap:10px;padding:14px 16px 32px}
+  #gamePlay .gp-bar{gap:7px;padding:8px 10px;flex-wrap:wrap}
+  #gameTitle{flex:1;min-width:calc(100% - 120px);font-size:14px}
+  #gameStatus{order:2;flex:1 0 100%;margin-left:0;font-size:11px}
+  #gameBack,#gameRetry,#gameFullscreen,#gameStandalone{padding:8px 10px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){#view-games .ggrid > button.game-card{transition:none}}

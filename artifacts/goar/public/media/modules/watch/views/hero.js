@@ -20,18 +20,70 @@ globalThis.buildHero = async function buildHero(fetcher, eyebrow){
     const realType = pick._realType || (t==="anime" ? pick._animeKind : t);
     document.getElementById("watchHeroPlay").onclick = () => openPlayer(pick.id, realType, titleOf(pick), pick);
     document.getElementById("heroDetails").onclick = () => openModal(pick.id, realType);
-  } catch(e){ heroEl.innerHTML = '<div class="loader err">Couldn\'t load — ' + e.message + '</div>'; }
+  } catch {
+    heroEl.replaceChildren();
+    const error = document.createElement("div");
+    error.className = "loader err";
+    error.setAttribute("role", "alert");
+    error.textContent = "Could not load featured titles. Check your connection and retry.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "btn btn-ghost";
+    retry.textContent = "Retry";
+    retry.onclick = () => buildHero(fetcher, eyebrow);
+    error.appendChild(retry);
+    heroEl.appendChild(error);
+  }
 }
 
 /* ================= GENRES ================= */
 globalThis.genresMovie= [],globalThis.genresTV= [];
+globalThis.genreLoadError = false;
 globalThis.ensureGenres = async function ensureGenres(){
   if (genresMovie.length && genresTV.length) return;
-  try { const [mg,tg] = await Promise.all([tmdb("/genre/movie/list"), tmdb("/genre/tv/list")]); genresMovie = mg.genres; genresTV = tg.genres; } catch(e){}
+  try {
+    const [mg,tg] = await Promise.all([tmdb("/genre/movie/list"), tmdb("/genre/tv/list")]);
+    genresMovie = mg.genres || [];
+    genresTV = tg.genres || [];
+    genreLoadError = false;
+  } catch {
+    genreLoadError = true;
+  }
 }
 globalThis.genreChipsBar = function genreChipsBar(list, onPick){
   const div = document.createElement("div"); div.className = "chips";
-  list.forEach(g => { const c = document.createElement("div"); c.className = "chip"; c.textContent = g.name; c.onclick = () => onPick(g); div.appendChild(c); });
+  if (!list.length && genreLoadError){
+    const message = document.createElement("p");
+    message.className = "filter-message";
+    message.setAttribute("role", "status");
+    message.textContent = "Genres could not load. Check your connection and retry.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "btn btn-ghost";
+    retry.textContent = "Retry genre filters";
+    retry.onclick = async () => {
+      await ensureGenres();
+      const nextList = activeTab === "tv" ? genresTV : genresMovie;
+      div.replaceWith(genreChipsBar(nextList, onPick));
+    };
+    div.append(message, retry);
+    return div;
+  }
+  list.forEach(g => {
+    const c = document.createElement("button");
+    c.type = "button";
+    c.className = "chip";
+    c.textContent = g.name;
+    c.onclick = () => {
+      try {
+        const result = onPick(g);
+        if (result && typeof result.catch === "function") result.catch(() => toast(g.name + " could not load. Try again."));
+      } catch {
+        toast(g.name + " could not load. Try again.");
+      }
+    };
+    div.appendChild(c);
+  });
   return div;
 }
 globalThis.dedupeGenres = function dedupeGenres(list){ const seen = new Set(); return list.filter(g => { if (seen.has(g.name)) return false; seen.add(g.name); return true; }); }

@@ -27,7 +27,10 @@ globalThis.buildWestLive = function buildWestLive(){
 globalThis.playWest = function playWest(ch){
   playerToken++;
   const overlay = document.getElementById("playerOverlay");
+  if (!overlay.classList.contains("open")) globalThis.playerReturnFocus = document.activeElement;
   overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  playerRetryAction = () => playWest(ch);
   document.body.style.overflow = "hidden";
   document.getElementById("playerTitle").textContent = ch.n;
   document.getElementById("playerTag").textContent = "LIVE";
@@ -42,7 +45,10 @@ globalThis.playWest = function playWest(ch){
   playerState.sourceName = ch.n;
   playerState.title = ch.n;
   setPlayerStatus("Starting " + ch.n + "…");
-  playSource(src).catch(function(e){ setPlayerStatus(e.message || String(e), true); });
+  playSource(src).catch(function(e){
+    const detail = String(e && e.message ? e.message : e).replace(/([?&](?:api_key|key|token|password|secret|auth)=)[^&\s]+/gi, "$1[redacted]");
+    setPlayerStatus("Could not start this public stream: " + detail, true);
+  });
 }
 
 /* ================= NAV ================= */

@@ -62,12 +62,29 @@ globalThis.continueList= LS.get("goar_continue", []);
 globalThis.isSaved = function isSaved(id, type){ return watchlist.some(x => x.id == id && x.type === type); }
 globalThis.toggleSave = function toggleSave(item, type){
   const i = watchlist.findIndex(x => x.id == item.id && x.type === type);
-  if (i >= 0){ watchlist.splice(i, 1); toast("Removed from My List"); }
+  const removed = i >= 0;
+  if (removed){ watchlist.splice(i, 1); toast("Removed from My List"); }
   else { watchlist.unshift({ id:item.id, type, title:titleOf(item), poster:item.poster_path, rating:item.vote_average, date:yearOf(item), added:Date.now() }); toast("Added to My List"); }
   LS.set("goar_watchlist", watchlist);
   document.getElementById("view-watch").querySelectorAll(".card-save[data-id=\"" + item.id + "\"][data-type=\"" + type + "\"]").forEach(b => {
-    const saved = isSaved(item.id, type); b.classList.toggle("saved", saved);
+    const saved = isSaved(item.id, type);
+    b.classList.toggle("saved", saved);
+    b.setAttribute("aria-pressed", String(saved));
+    b.setAttribute("aria-label", saved ? "Remove " + titleOf(item) + " from My List" : "Add " + titleOf(item) + " to My List");
   });
+  if (removed && activeTab === "list"){
+    document.getElementById("view-watch").querySelectorAll(".card-save[data-id=\"" + item.id + "\"][data-type=\"" + type + "\"]").forEach(b => b.closest(".card")?.remove());
+    const count = document.querySelector("#mainContent .section-head p");
+    if (count) count.textContent = watchlist.length + " saved title" + (watchlist.length === 1 ? "" : "s");
+    const grid = document.querySelector("#mainContent .section .grid");
+    if (watchlist.length === 0 && grid){
+      grid.replaceChildren();
+      const empty = document.createElement("div");
+      empty.className = "loader";
+      empty.textContent = "Nothing saved yet. Tap the bookmark on any card or in a title's detail view.";
+      grid.appendChild(empty);
+    }
+  }
 }
 globalThis.pushContinue = function pushContinue(item, type, season, episode){
   continueList = continueList.filter(x => !(x.id == item.id && x.type === type));

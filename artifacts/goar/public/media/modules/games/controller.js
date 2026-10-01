@@ -11,6 +11,7 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
   function show(name, push){
     if(name==="watch") name="movie";
     const asked = name;
+    if (asked !== "games" && !document.getElementById("gamePlay")?.hidden) closeGame(false);
     const watchTabs=["movie","tv","anime","kids","hubs","music","list","live"];
     let inner=null;
     if(name==="live"||name==="list"){ inner=name; name="movie"; }
@@ -38,61 +39,180 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
   let gamesReady = false;
   let gameQuery = "";
   let gameCat = "all";
-  const GAME_CATS = ["all","arcade","puzzle","word","skill","strategy","creative"];
+  let activeGame = null;
+  let gameSession = 0;
+  let gameTimer = 0;
+  let previousGameFocus = null;
+  const GAME_CATS = ["all", ...new Set(GAMES.map(g => (g.category || "").trim().toLowerCase()).filter(Boolean))];
+  const escapeText = value => String(value || "").replace(/[&<>"]/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  })[char]);
+  function gameUrl(game){
+    try {
+      const url = new URL(game.file);
+      if (url.protocol !== "https:" || !["cdn-factory.marketjs.com", "cdn-consumer.marketjs.com"].includes(url.hostname)) return null;
+      if (url.hostname === "cdn-consumer.marketjs.com" && /^\/game\/[^/]+$/.test(url.pathname)) url.pathname += "/";
+      return url.href;
+    } catch (_) {
+      return null;
+    }
+  }
+  function gameCoverUrl(game){
+    try {
+      const url = new URL(game.cover);
+      return url.protocol === "https:" && url.hostname === "www.marketjs.com" ? url.href : "";
+    } catch (_) {
+      return "";
+    }
+  }
+  function updateGameStatus(message){
+    const status = document.getElementById("gameStatus");
+    if (status) status.textContent = message;
+  }
+  function loadGameFrame(){
+    if (!activeGame) return;
+    const frame = document.getElementById("gameFrame");
+    const url = gameUrl(activeGame);
+    if (!url) {
+      updateGameStatus("This catalogue entry has no valid game source.");
+      return;
+    }
+    const session = ++gameSession;
+    window.clearTimeout(gameTimer);
+    updateGameStatus("Loading game…");
+    frame.title = (activeGame.title || "Game") + " player";
+    frame.onload = function(){
+      if (session !== gameSession) return;
+      updateGameStatus("Game page opened. If play does not start, retry or open separately.");
+      window.clearTimeout(gameTimer);
+      gameTimer = window.setTimeout(function(){
+        if (session === gameSession) updateGameStatus("Still waiting? The publisher may block embedded play. Retry or open separately.");
+      }, 12000);
+    };
+    frame.onerror = function(){
+      if (session !== gameSession) return;
+      window.clearTimeout(gameTimer);
+      updateGameStatus("Could not load this game here. Try again or open it separately.");
+    };
+    frame.src = url;
+    gameTimer = window.setTimeout(function(){
+      if (session === gameSession) updateGameStatus("The game is taking a while to load. Retry or open separately.");
+    }, 20000);
+  }
   function renderGames(){
     const box = document.getElementById("gameGrid");
     const q = gameQuery.trim().toLowerCase();
     const rows = GAMES.filter(function(g){
       if (gameCat !== "all" && (g.category || "") !== gameCat) return false;
       if (!q) return true;
-      return ((g.title || "") + " " + (g.description || "") + " " + (g.category || "")).toLowerCase().indexOf(q) >= 0;
+      return ((g.title || "") + " " + (g.description || "") + " " + (g.category || "")).toLowerCase().includes(q);
     });
-    if (!rows.length){ box.innerHTML = '<p class="gempty">No games match.</p>'; return; }
-    box.innerHTML = rows.map(function(g){
-      const cover = g.cover || "";
+    const count = document.getElementById("gameCount");
+    if (count) count.textContent = `${rows.length} ${rows.length === 1 ? "game" : "games"} shown · publisher availability varies.`;
+    box.replaceChildren();
+    if (!rows.length){
+      const empty = document.createElement("p");
+      empty.className = "gempty";
+      empty.textContent = "No games match this search and category. Try another term or choose All.";
+      box.appendChild(empty);
+      return;
+    }
+    rows.forEach(function(g){
       const title = g.title || "Game";
-      return '<button type="button" data-id="' + g.id + '"><img src="' + cover + '" alt="" loading="lazy"><b>' + String(title).replace(/&/g,"&"+"amp;").replace(/</g,"&"+"lt;").replace(/>/g,"&"+"gt;") + '</b><span>' + (g.category || "") + '</span></button>';
-    }).join("");
-    box.querySelectorAll("[data-id]").forEach(function(el){
-      el.onclick = function(){ playGame(el.getAttribute("data-id")); };
+      const category = g.category || "game";
+      const source = gameUrl(g);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "game-card" + (source ? "" : " unavailable");
+      card.dataset.id = g.id;
+      card.disabled = !source;
+      card.setAttribute("aria-label", source
+        ? `Play ${title}, ${category}. ${g.description || ""}`
+        : `${title} is unavailable because it has no valid source.`);
+      const coverUrl = gameCoverUrl(g);
+      if (coverUrl){
+        const image = document.createElement("img");
+        image.src = coverUrl;
+        image.alt = "";
+        image.loading = "lazy";
+        image.onerror = function(){
+          const placeholder = document.createElement("span");
+          placeholder.className = "game-cover-fallback";
+          placeholder.setAttribute("aria-hidden", "true");
+          placeholder.textContent = "GOAR";
+          image.replaceWith(placeholder);
+        };
+        card.appendChild(image);
+      } else {
+        const placeholder = document.createElement("span");
+        placeholder.className = "game-cover-fallback";
+        placeholder.setAttribute("aria-hidden", "true");
+        placeholder.textContent = "GOAR";
+        card.appendChild(placeholder);
+      }
+      const info = document.createElement("span");
+      info.className = "game-card-info";
+      const name = document.createElement("b");
+      name.textContent = title;
+      const description = document.createElement("span");
+      description.className = "game-card-description";
+      description.textContent = g.description || "";
+      const meta = document.createElement("span");
+      meta.className = "game-card-category";
+      meta.textContent = source ? category : "Unavailable";
+      info.append(name, description, meta);
+      card.appendChild(info);
+      card.onclick = function(){ if (source) playGame(g.id); };
+      box.appendChild(card);
     });
   }
   function playGame(id){
     const g = GAMES.find(function(x){ return x.id === id; });
-    if (!g || !g.file) return;
+    if (!g) return;
+    if (!gameUrl(g)) return;
     const play = document.getElementById("gamePlay");
-    const frame = document.getElementById("gameFrame");
-    const status = document.getElementById("gameStatus");
+    const link = document.getElementById("gameStandalone");
+    activeGame = g;
+    previousGameFocus = document.activeElement;
     document.getElementById("gameTitle").textContent = g.title || "Game";
-    if (status) status.textContent = "Loading…";
+    link.href = gameUrl(g);
     play.hidden = false;
     document.body.classList.add("playing-game");
-    frame.onload = function(){
-      if (!status) return;
-      if (frame.src && frame.src.indexOf("about:blank") < 0) status.textContent = "";
-    };
-    frame.src = "about:blank";
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){ frame.src = g.file; });
-    });
+    document.getElementById("gameBack").focus();
+    loadGameFrame();
   }
-  function closeGame(){
+  function closeGame(restoreFocus=true){
     const frame = document.getElementById("gameFrame");
-    frame.src = "about:blank";
-    document.getElementById("gamePlay").hidden = true;
+    const play = document.getElementById("gamePlay");
+    if (!play || play.hidden) return;
+    gameSession++;
+    window.clearTimeout(gameTimer);
+    frame.onload = null;
+    frame.onerror = null;
+    frame.removeAttribute("src");
+    if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
+    play.hidden = true;
     document.body.classList.remove("playing-game");
+    activeGame = null;
+    if (restoreFocus && previousGameFocus && previousGameFocus.isConnected) previousGameFocus.focus();
+    previousGameFocus = null;
   }
   function loadGames(){
     if (gamesReady) return;
     gamesReady = true;
     const cats = document.getElementById("gameCats");
     cats.innerHTML = GAME_CATS.map(function(c){
-      return '<button type="button" class="gchip' + (c===gameCat?" on":"") + '" data-cat="' + c + '">' + (c==="all"?"All":c) + '</button>';
+      const label = c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1);
+      const count = c === "all" ? GAMES.length : GAMES.filter(g => (g.category || "").toLowerCase() === c).length;
+      return '<button type="button" class="gchip' + (c===gameCat?" on":"") + '" data-cat="' + escapeText(c) + '" aria-pressed="' + (c===gameCat) + '">' + escapeText(label) + ' <span>' + count + '</span></button>';
     }).join("");
     cats.querySelectorAll("[data-cat]").forEach(function(btn){
       btn.onclick = function(){
         gameCat = btn.getAttribute("data-cat");
-        cats.querySelectorAll(".gchip").forEach(function(x){ x.classList.toggle("on", x===btn); });
+        cats.querySelectorAll(".gchip").forEach(function(x){
+          x.classList.toggle("on", x===btn);
+          x.setAttribute("aria-pressed", String(x===btn));
+        });
         renderGames();
       };
     });
@@ -101,6 +221,17 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
       renderGames();
     });
     document.getElementById("gameBack").onclick = closeGame;
+    document.getElementById("gameRetry").onclick = loadGameFrame;
+    document.getElementById("gameFullscreen").onclick = async function(){
+      const frame = document.getElementById("gameFrame");
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else if (frame.requestFullscreen) await frame.requestFullscreen();
+        else updateGameStatus("Fullscreen is not available in this browser.");
+      } catch (_) {
+        updateGameStatus("Fullscreen was blocked. You can still open the game separately.");
+      }
+    };
     document.addEventListener("keydown", function(e){ if (e.key === "Escape" && document.getElementById("view-games").classList.contains("on")) closeGame(); });
     renderGames();
   }
