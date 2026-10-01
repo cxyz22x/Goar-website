@@ -10,23 +10,22 @@ const mediaRoot = resolve(workspace, "artifacts/goar/public/media");
 const sourceHtml = await readFile(resolve(workspace, "attached_assets/goar_(16)_1790817694377.html"), "utf8");
 const readMedia = (path) => readFile(resolve(mediaRoot, path), "utf8");
 
-test("generated CSS preserves every authored line in cascade order", async () => {
-  const authoredCss = sourceHtml.match(/<style>([\s\S]*?)<\/style>/i)?.[1];
-  assert.ok(authoredCss, "the uploaded page must retain its authored stylesheet");
+test("media styles cover every maintained surface and control after the requested redesign", async () => {
   const names = ["watch", "music", "shell", "games", "overrides"];
   const files = await Promise.all(names.map((name) => readMedia(`styles/${name}.css`)));
-  const generatedCss = files.join("\n");
-  const sourceLines = authoredCss.split("\n");
-  const sourceChunks = [[0, 385], [385, 520], [520, 557], [557, 578], [578, sourceLines.length]]
-    .map(([start, end]) => sourceLines.slice(start, end).join("\n"));
-  let lastSourcePosition = -1;
-  for (const chunk of sourceChunks) {
-    const position = generatedCss.indexOf(chunk);
-    assert.ok(position > lastSourcePosition, "all authored CSS segments must remain intact and in cascade order");
-    lastSourcePosition = position;
+  const required = [
+    [".hero", ".rail", ".card"],
+    [".goar-music", ".sidebar", ".transport"],
+    ["#app-shell", "#view-home"],
+    ["#gamesWrap", "#gamePlay", ".game-library-head"],
+    ["#app-dock"],
+  ];
+  for (let index = 0; index < files.length; index++) {
+    const css = files[index].replace(/\/\*[\s\S]*?\*\//g, "");
+    assert.ok(css.length > 200, `${names[index]} must retain a real stylesheet`);
+    for (const selector of required[index]) assert.ok(css.includes(selector), `${names[index]} must style ${selector}`);
+    assert.equal((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, `${names[index]} stylesheet blocks must balance`);
   }
-  assert.ok(files[3].indexOf(".game-library-head") > files[3].indexOf(sourceChunks[3]), "games-only visual improvements must follow the authored games styles");
-  assert.ok(generatedCss.indexOf(".media-service-links") > lastSourcePosition, "the shared service-link rules must remain after the authored source cascade");
 });
 
 test("music WISP HLS loader is explicitly shared with the music player engine", async () => {
@@ -120,11 +119,41 @@ test("music toast, keyboard, selectors, navigation, and hero controls stay insid
   assert.ok(games.includes('e.key === "Escape" && document.getElementById("view-games").classList.contains("on")'), "game Escape handling must stay inside games");
 });
 
-test("initial and history navigation both accept the safe view and legacy v params", async () => {
-  const router = await readMedia("modules/games/controller.js");
-  assert.ok(router.includes('params.get("view") || params.get("v") || "home"'), "the initial view helper must prioritize view and retain v compatibility");
-  assert.ok(router.includes("show((ev.state&&ev.state.view)||requestedInitialView(), false)"), "popstate must use the same validated query helper");
-  assert.ok(router.includes("show(requestedInitialView(), false)"), "initial routing must use the validated query helper");
+test("initial and history routes preserve explicit and legacy Watch tabs", async () => {
+  const [{ routeFromSearch, routeFromHistory, mediaRouteUrl }, router] = await Promise.all([
+    import(pathToFileURL(resolve(mediaRoot, "modules/games/route-state.js")).href),
+    readMedia("modules/games/controller.js"),
+  ]);
+  assert.deepEqual(routeFromSearch("?view=watch&tab=tv"), {view:"watch", tab:"tv"});
+  assert.deepEqual(routeFromSearch("?view=watch&tab=home"), {view:"watch", tab:"home"}, "Watch home must remain a validated Watch subtab");
+  assert.deepEqual(routeFromSearch("?tab=tv"), {view:"watch", tab:"tv"}, "a bare legacy tab query must enter Watch");
+  assert.deepEqual(routeFromSearch("?v=tv"), {view:"tv"}, "the legacy v view parameter remains supported");
+  assert.deepEqual(routeFromSearch("?view=watch&tab=not-a-tab"), {view:"watch", tab:"movie"}, "invalid Watch tabs must fall back safely");
+  assert.deepEqual(routeFromSearch("?view=movie&tab=tv"), {view:"movie"}, "an explicit view must take precedence over stale tab values");
+  for (const tab of ["movie", "tv", "anime", "kids", "live", "hubs", "list"]) {
+    assert.deepEqual(routeFromSearch(`?view=${tab}`), {view:tab}, `the explicit ${tab} view must resolve directly`);
+  }
+  assert.deepEqual(routeFromHistory({view:"watch", tab:"tv"}, "?view=watch&tab=movie"), {view:"watch", tab:"tv"}, "history state must restore the tab selected at that entry");
+  assert.deepEqual(routeFromHistory({view:"watch", tab:"home"}, "?view=watch&tab=tv"), {view:"watch", tab:"home"}, "history state must preserve Watch home separately from media home");
+  assert.deepEqual(routeFromHistory({view:"watch"}, "?view=watch&tab=tv"), {view:"watch", tab:"tv"}, "older Watch history entries may restore their tab from the URL");
+  assert.deepEqual(routeFromHistory({view:"tv"}, "?tab=anime"), {view:"tv"}, "explicit history views must ignore stale tab parameters");
+  const nextTabUrl = mediaRouteUrl("tv", "tv", "https://goarxyz.test/media/index.html?tab=kids&v=watch");
+  assert.equal(nextTabUrl.searchParams.get("view"), "tv");
+  assert.equal(nextTabUrl.searchParams.has("tab"), false, "pushing an explicit view must remove stale tab parameters");
+  const watchUrl = mediaRouteUrl("watch", "tv", "https://goarxyz.test/media/index.html?tab=kids");
+  assert.equal(watchUrl.searchParams.get("view"), "watch");
+  assert.equal(watchUrl.searchParams.get("tab"), "tv");
+  const watchHomeUrl = mediaRouteUrl("watch", "home", "https://goarxyz.test/media/index.html?tab=tv");
+  assert.equal(watchHomeUrl.searchParams.get("view"), "watch");
+  assert.equal(watchHomeUrl.searchParams.get("tab"), "home", "Watch home must survive direct links and Back navigation");
+  assert.deepEqual(routeFromSearch(watchHomeUrl.search), {view:"watch", tab:"home"});
+  assert.deepEqual(routeFromSearch("?view=home&tab=tv"), {view:"home"}, "explicit media home must remain distinct from Watch home");
+  assert.ok(router.includes("routeFromHistory(ev.state, location.search)"), "popstate must restore route state and the current URL consistently");
+  assert.ok(router.includes("routeFromSearch(location.search)"), "initial routing must validate the current URL");
+  assert.ok(router.includes("mediaRouteUrl(historyView, watchTab, location.href)"), "navigation history URLs must be centrally canonicalized");
+  assert.ok(router.includes('requestedView === "watch" ? "watch"'), "Watch subtabs including home must render inside the Watch section");
+  assert.ok(router.includes("function show(name, push, requestedTab)"), "the route owner must honor the Watch worker's validated third argument");
+  assert.ok(router.includes("window.goarShow = show"), "the shared Watch worker must be able to request top-level route history");
 });
 
 test("games retain the supplied catalogue and expose resilient player controls", async () => {

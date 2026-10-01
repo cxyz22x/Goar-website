@@ -38,16 +38,18 @@ function setMediaTitle(view) {
   const name = titles[view] || "Media";
   document.title = name === "Overview" ? "Media — Overview" : `${name} — Media`;
 }
-function mediaRoute(name, push = false) {
+function mediaRoute(name, push = false, requestedTab = null) {
   const asked = supportedViews.has(name) ? name : "home";
   if (typeof window.goarShow === "function" && window.goarShow !== mediaRoute) {
-    window.goarShow(asked, push);
+    window.goarShow(asked, push, requestedTab);
     setMediaTitle(asked);
     return;
   }
 
-  const tab = asked === "watch" ? "movie" : asked;
-  const innerTab = ["movie", "tv", "live", "list", "anime", "kids", "hubs"].includes(tab);
+  const tab = asked === "watch"
+    ? (["home", "movie", "tv", "anime", "kids", "music", "live", "list", "hubs"].includes(requestedTab) ? requestedTab : "movie")
+    : asked;
+  const innerTab = ["home", "movie", "tv", "live", "list", "anime", "kids", "hubs"].includes(tab);
   const visibleView = innerTab ? "watch" : tab;
   ["home", "watch", "music", "games"].forEach((view) => {
     document.getElementById("view-" + view)?.classList.toggle("on", view === visibleView);
@@ -57,10 +59,12 @@ function mediaRoute(name, push = false) {
   }
   if (push) {
     const url = new URL("media/index.html", mediaRoot);
-    if (asked !== "home") url.searchParams.set("view", asked);
-    history.pushState({ view: asked }, "", url);
+    const historyView = asked === "watch" ? "watch" : asked;
+    if (historyView !== "home") url.searchParams.set("view", historyView);
+    if (historyView === "watch") url.searchParams.set("tab", tab);
+    history.pushState(historyView === "watch" ? { view: "watch", tab } : { view: asked }, "", url);
   }
-  setMediaTitle(asked);
+  setMediaTitle(asked === "watch" ? (tab === "home" ? "watch" : tab) : asked);
 }
 window.goarShow = mediaRoute;
 
@@ -75,8 +79,11 @@ document.addEventListener("click", (event) => {
 }, true);
 window.addEventListener("popstate", (event) => {
   const view = event.state?.view || requestedView();
-  if (window.goarShow === mediaRoute) mediaRoute(view);
-  setTimeout(() => setMediaTitle(view), 0);
+  if (window.goarShow === mediaRoute) {
+    const tab = view === "watch" ? (event.state?.tab || requestedWatchTab()) : null;
+    mediaRoute(view, false, tab);
+    setMediaTitle(view === "watch" ? (tab === "home" ? "watch" : tab || "watch") : view);
+  }
 });
 function requestedView() {
   const params = new URLSearchParams(location.search);
@@ -185,15 +192,15 @@ const gamesReady = await bootService("games", gameModules);
 // other sections reachable if that feature bundle itself failed to initialize.
 if (!gamesReady || typeof window.goarShow !== "function") {
   window.goarShow = mediaRoute;
-  if (!gamesReady) mediaRoute(requestedView());
+  if (!gamesReady) {
+    const watchTab = requestedWatchTab();
+    if (watchTab) mediaRoute("watch", false, watchTab);
+    else mediaRoute(requestedView());
+  }
 } else if (!watchReady && requestedView() !== "home") {
   // The failing feature already has a visible retry action. Preserve it rather
   // than replacing it with a generic navigation error.
   mediaRoute(requestedView());
 }
-// The shared games controller recognizes view=watch as the Movies tab. Apply an
-// explicit Watch sub-tab afterward so deep links such as ?view=watch&tab=tv
-// cannot be replaced by that default.
-const deepWatchTab = requestedWatchTab();
-if (deepWatchTab && typeof window.routeTo === "function") window.routeTo(deepWatchTab, true);
-setMediaTitle(requestedWatchTab() || requestedView());
+const initialWatchTab = requestedWatchTab();
+setMediaTitle(initialWatchTab ? (initialWatchTab === "home" ? "watch" : initialWatchTab) : requestedView());

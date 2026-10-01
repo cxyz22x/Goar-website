@@ -27,6 +27,7 @@ globalThis.buildKidsTab = async function buildKidsTab(){
 globalThis.showKids = async function showKids(kind){
   const titles = {new:"New for Kids", popular:"Popular with Kids", movies:"Kids Movies", tv:"Kids TV Shows", top:"Top Rated Family"};
   const grid = openGrid(titles[kind]);
+  const requestToken = gridRequestGeneration;
   try {
     let items;
     if (kind==="new") items = await kidsDiscover({sort_by:"primary_release_date.desc","primary_release_date.lte":TODAY,"vote_count.gte":5});
@@ -34,13 +35,24 @@ globalThis.showKids = async function showKids(kind){
     else if (kind==="movies") items = await kidsDiscover({sort_by:"popularity.desc"},"movie");
     else if (kind==="tv") items = await kidsDiscover({sort_by:"popularity.desc"},"tv");
     else items = await kidsDiscover({sort_by:"popularity.desc"});
+    if (!currentGridRequest(requestToken, grid)) return;
     grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {kids:true}, idx)));
-  } catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showKids(kind), requestToken);
+  }
 }
 globalThis.showKidsGenreGrid = async function showKidsGenreGrid(g){
   const grid = openGrid("Kids · "+g.name);
-  try { const items = await kidsDiscover({with_genres:"" + g.id, sort_by:"popularity.desc"}); grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {kids:true}, idx))); }
-  catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  const requestToken = gridRequestGeneration;
+  try {
+    const items = await kidsDiscover({with_genres:"" + g.id, sort_by:"popularity.desc"});
+    if (!currentGridRequest(requestToken, grid)) return;
+    grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {kids:true}, idx)));
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showKidsGenreGrid(g), requestToken);
+  }
 }
 
 

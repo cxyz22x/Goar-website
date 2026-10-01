@@ -92,17 +92,20 @@ globalThis.loadRail = async function loadRail(elId, fetcher, opts={}){
   const requestToken = (railRequests.get(elId) || 0) + 1;
   railRequests.set(elId, requestToken);
   const requestedTab = activeTab;
+  const navigationToken = watchNavigationGeneration;
   const el = document.getElementById(elId);
   if (!el) return;
   el.innerHTML = "";
   for (let i=0;i<6;i++){ const sk = document.createElement("div"); sk.className = "skel"; el.appendChild(sk); }
   try {
     const items = await fetcher();
-    if (railRequests.get(elId) !== requestToken || activeTab !== requestedTab || !el.isConnected) return;
+    if (railRequests.get(elId) !== requestToken || activeTab !== requestedTab ||
+        !isCurrentWatchNavigation(navigationToken) || !el.isConnected) return;
     railInto(el, items, opts);
   }
   catch {
-    if (railRequests.get(elId) !== requestToken || activeTab !== requestedTab || !el.isConnected) return;
+    if (railRequests.get(elId) !== requestToken || activeTab !== requestedTab ||
+        !isCurrentWatchNavigation(navigationToken) || !el.isConnected) return;
     el.replaceChildren();
     const error = document.createElement("div");
     error.className = "loader err small";
@@ -118,12 +121,17 @@ globalThis.loadRail = async function loadRail(elId, fetcher, opts={}){
   }
 }
 globalThis.sectionEl = function sectionEl(id, title, sub, seeAllFn){
+  const navigationToken = watchNavigationGeneration;
   const s = document.createElement("div");
   s.className = "section";
   s.innerHTML = '<div class="section-head"><div><h2>' + title + '</h2>' + (sub ? '<p>'+sub+'</p>' : '') + '</div>' +
     (seeAllFn ? '<button type="button" class="see-all" id="' + id + '_seeall">See all →</button>' : '') + '</div>' +
     '<div class="rail" id="' + id + '"></div>';
-  if (seeAllFn) setTimeout(()=>{ const el = document.getElementById(id+"_seeall"); if (el) el.onclick = seeAllFn; }, 0);
+  if (seeAllFn) setTimeout(()=>{
+    if (!isCurrentWatchNavigation(navigationToken) || !s.isConnected) return;
+    const el = s.querySelector("#" + id + "_seeall");
+    if (el) el.onclick = seeAllFn;
+  }, 0);
   return s;
 }
 

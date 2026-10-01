@@ -1,11 +1,22 @@
 import "../../../services/storage.js";
 let gridReturnFocus = null;
 let gridRequestToken = 0;
-globalThis.invalidateGridRequests = function invalidateGridRequests(){
+globalThis.gridRequestGeneration = 0;
+function nextGridRequest(){
   gridRequestToken++;
+  gridRequestGeneration = gridRequestToken;
+  return gridRequestToken;
+}
+globalThis.currentGridRequest = function currentGridRequest(token, grid){
+  return token === gridRequestGeneration &&
+    document.getElementById("gridView").classList.contains("open") &&
+    (!grid || document.getElementById("gridGrid") === grid);
+}
+globalThis.invalidateGridRequests = function invalidateGridRequests(){
+  nextGridRequest();
 }
 globalThis.openGrid = function openGrid(title){
-  gridRequestToken++;
+  nextGridRequest();
   if (!document.getElementById("gridView").classList.contains("open")) gridReturnFocus = document.activeElement;
   document.getElementById("hero").style.display = "none";
   document.getElementById("mainContent").style.display = "none";
@@ -26,7 +37,8 @@ document.getElementById("gridBack").onclick = () => {
   target?.focus();
   gridReturnFocus = null;
 };
-function gridError(grid, retry){
+globalThis.showGridRequestError = function showGridRequestError(grid, retry, token = gridRequestGeneration){
+  if (!currentGridRequest(token, grid)) return;
   grid.replaceChildren();
   const message = document.createElement("div");
   message.className = "loader err";
@@ -40,6 +52,9 @@ function gridError(grid, retry){
   message.appendChild(button);
   grid.appendChild(message);
 }
+function gridError(grid, retry, token){
+  showGridRequestError(grid, retry, token);
+}
 globalThis.showGenreGrid = async function showGenreGrid(genre, scope){
   const grid = openGrid(genre.name);
   const requestToken = gridRequestToken;
@@ -47,16 +62,16 @@ globalThis.showGenreGrid = async function showGenreGrid(genre, scope){
     let merged = [];
     if (scope==="movie" || scope==="all"){ const m = await tmdb("/discover/movie",{with_genres:genre.id, sort_by:"popularity.desc", include_adult:false}); merged.push(...m.results.map(x=>({...x,media_type:"movie"}))); }
     if (scope==="tv" || scope==="all"){ const t = await tmdb("/discover/tv",{with_genres:genre.id, sort_by:"popularity.desc", include_adult:false}); merged.push(...t.results.map(x=>({...x,media_type:"tv"}))); }
-    if (requestToken !== gridRequestToken || !document.getElementById("gridView").classList.contains("open")) return;
+    if (!currentGridRequest(requestToken, grid)) return;
     merged = mergeTwo(merged.filter(x=>x.media_type==="movie"), merged.filter(x=>x.media_type==="tv"), cmpPop);
     grid.innerHTML=""; merged.forEach((i,idx)=>grid.appendChild(card(i, {}, idx)));
-  } catch { if (requestToken === gridRequestToken) gridError(grid, () => showGenreGrid(genre, scope)); }
+  } catch { if (currentGridRequest(requestToken, grid)) gridError(grid, () => showGenreGrid(genre, scope), requestToken); }
 }
 globalThis.showAnimeGenreGrid = async function showAnimeGenreGrid(g){
   const grid = openGrid("Anime · " + g.name);
   const requestToken = gridRequestToken;
-  try { const items = await animeDiscover({with_genres:"16," + g.id, sort_by:"popularity.desc"}); if (requestToken !== gridRequestToken || !document.getElementById("gridView").classList.contains("open")) return; grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {}, idx))); }
-  catch { if (requestToken === gridRequestToken) gridError(grid, () => showAnimeGenreGrid(g)); }
+  try { const items = await animeDiscover({with_genres:"16," + g.id, sort_by:"popularity.desc"}); if (!currentGridRequest(requestToken, grid)) return; grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {}, idx))); }
+  catch { if (currentGridRequest(requestToken, grid)) gridError(grid, () => showAnimeGenreGrid(g), requestToken); }
 }
 globalThis.showAnime = async function showAnime(kind){
   const titles = {new:"New Anime Releases", popular:"Popular Anime", top:"Top Rated Anime", movies:"Anime Movies", airing:"Airing Anime"};
@@ -69,9 +84,9 @@ globalThis.showAnime = async function showAnime(kind){
     else if (kind==="movies") items = await animeDiscover({sort_by:"popularity.desc"},"movie");
     else if (kind==="airing") items = await animeDiscover({sort_by:"popularity.desc","first_air_date.lte":TODAY,"vote_count.gte":10},"tv");
     else items = await animeDiscover({sort_by:"popularity.desc"});
-    if (requestToken !== gridRequestToken || !document.getElementById("gridView").classList.contains("open")) return;
+    if (!currentGridRequest(requestToken, grid)) return;
     grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {}, idx)));
-  } catch { if (requestToken === gridRequestToken) gridError(grid, () => showAnime(kind)); }
+  } catch { if (currentGridRequest(requestToken, grid)) gridError(grid, () => showAnime(kind), requestToken); }
 }
 globalThis.showSpecial = async function showSpecial(kind){
   const titles = {
@@ -108,9 +123,9 @@ globalThis.showSpecial = async function showSpecial(kind){
     else if (kind==="airing_tv") items = (await tmdb("/tv/airing_today")).results.map(x=>({...x,media_type:"tv"}));
     else if (kind==="onair_tv") items = (await tmdb("/tv/on_the_air")).results.map(x=>({...x,media_type:"tv"}));
     else if (kind==="pop_tv") items = (await tmdb("/tv/popular")).results.map(x=>({...x,media_type:"tv"}));
-    if (requestToken !== gridRequestToken || !document.getElementById("gridView").classList.contains("open")) return;
+    if (!currentGridRequest(requestToken, grid)) return;
     grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {}, idx)));
-  } catch { if (requestToken === gridRequestToken) gridError(grid, () => showSpecial(kind)); }
+  } catch { if (currentGridRequest(requestToken, grid)) gridError(grid, () => showSpecial(kind), requestToken); }
 }
 
 /* ================= CATEGORY BAR ================= */

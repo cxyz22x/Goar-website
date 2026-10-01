@@ -66,7 +66,7 @@ globalThis.bindList = function bindList(root, items){
   });
 }
 globalThis.useList = function useList(items, id, auto){
-  state.list=items.slice();
+  musicSetQueue(items);
   state.shuffleHistory=[];
   const idx=Math.max(0, state.list.findIndex(x=>x.id===id));
   playAt(idx, auto);

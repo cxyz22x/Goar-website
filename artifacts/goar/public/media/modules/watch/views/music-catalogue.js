@@ -25,19 +25,31 @@ globalThis.buildMusicTab = async function buildMusicTab(){
 globalThis.showMusic = async function showMusic(kind){
   const titles = {new:"New Music Releases", trend:"Trending Music", top:"Top Rated Music", docs:"Music Documentaries"};
   const grid = openGrid(titles[kind]);
+  const requestToken = gridRequestGeneration;
   try {
     let items;
     if (kind==="new") items = await musicDiscover({sort_by:"primary_release_date.desc","primary_release_date.lte":TODAY,"vote_count.gte":5});
     else if (kind==="top") items = await musicDiscover({sort_by:"vote_average.desc","vote_count.gte":50});
     else if (kind==="docs") items = await musicDiscover({sort_by:"popularity.desc", with_genres:"99,10402"});
     else items = await musicDiscover({sort_by:"popularity.desc"});
+    if (!currentGridRequest(requestToken, grid)) return;
     grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(musicCard(i, idx)));
-  } catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showMusic(kind), requestToken);
+  }
 }
 globalThis.showMusicGenreGrid = async function showMusicGenreGrid(g){
   const grid = openGrid("Music · "+g.name);
-  try { const items = await musicDiscover({with_genres:MUSIC_GENRE_ID + "," + g.id, sort_by:"popularity.desc"}); grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(musicCard(i, idx))); }
-  catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  const requestToken = gridRequestGeneration;
+  try {
+    const items = await musicDiscover({with_genres:MUSIC_GENRE_ID + "," + g.id, sort_by:"popularity.desc"});
+    if (!currentGridRequest(requestToken, grid)) return;
+    grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(musicCard(i, idx)));
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showMusicGenreGrid(g), requestToken);
+  }
 }
 
 /* ================= HOME ================= */

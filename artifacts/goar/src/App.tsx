@@ -46,7 +46,7 @@ function Router() {
         <Route path="/agent" component={AgentWorkspace} />
         {['watch', 'movies', 'tv', 'anime', 'kids', 'live', 'hubs', 'list', 'music', 'games', 'media'].flatMap(view =>
           [`/${view}`, `/${view}/`, `/${view}/index.html`].map(path => (
-            <Route key={path} path={path}><OpenMedia view={view === 'media' ? 'home' : view} /></Route>
+            <Route key={path} path={path}><OpenMedia view={view === 'media' ? 'home' : view === 'movies' ? 'movie' : view} /></Route>
           ))
         )}
         {['privacy', 'terms', 'license', 'data-safety'].map((k) => (

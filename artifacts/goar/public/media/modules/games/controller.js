@@ -1,28 +1,29 @@
-const MEDIA_VIEWS = new Set(["home", "watch", "movie", "tv", "live", "music", "games", "anime", "kids", "hubs", "list"]);
-function requestedInitialView(){
-  const params = new URLSearchParams(location.search);
-  const requested = params.get("view") || params.get("v") || "home";
-  return MEDIA_VIEWS.has(requested) ? requested : "home";
-}
-
 import { GAMES } from "../../data/game-catalog.js";
+import { mediaRouteUrl, routeFromHistory, routeFromSearch, WATCH_TABS } from "./route-state.js";
 const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live:"Live — goarxyz",list:"List — goarxyz",music:"Music — goarxyz",games:"Games — goarxyz"};
   let gamesLoaded=false;
-  function show(name, push){
-    if(name==="watch") name="movie";
+  function show(name, push, requestedTab){
+    const requestedView = name;
+    let watchTab = null;
+    if(name==="watch"){
+      watchTab = WATCH_TABS.has(requestedTab) ? requestedTab : "movie";
+      name = watchTab;
+    } else if(WATCH_TABS.has(name)){
+      watchTab = name;
+    }
     const asked = name;
     if (asked !== "games" && !document.getElementById("gamePlay")?.hidden) closeGame(false);
     const watchTabs=["movie","tv","anime","kids","hubs","music","list","live"];
     let inner=null;
     if(name==="live"||name==="list"){ inner=name; name="movie"; }
-    const view = name==="home"||name==="music"||name==="games" ? name : "watch";
+    const view = requestedView === "watch" ? "watch" : name==="home"||name==="music"||name==="games" ? name : "watch";
     ["home","watch","music","games"].forEach(v=>{
       const el=document.getElementById("view-"+v);
       if(el) el.classList.toggle("on", v===view);
     });
     document.querySelectorAll("#app-dock [data-view]").forEach(b=>{
       const id=b.getAttribute("data-view");
-      b.classList.toggle("on", id===asked || (!inner && id==="movie" && asked==="movie") || (asked==="tv" && id==="tv"));
+      b.classList.toggle("on", (requestedView !== "watch" || watchTab !== "home") && (id===asked || (!inner && id==="movie" && asked==="movie") || (asked==="tv" && id==="tv")));
     });
     document.title=titles[asked]||"goarxyz";
     if(view==="watch" && typeof routeTo==="function"){
@@ -30,9 +31,11 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
     }
     if(name==="games") loadGames();
     if(push){
-      const url = new URL("./index.html", location.href);
-      if (asked !== "home") url.searchParams.set("view", asked);
-      history.pushState({view:asked}, "", url);
+      const historyView = requestedView === "watch" ? "watch" : asked;
+      const url = mediaRouteUrl(historyView, watchTab, location.href);
+      const state = {view:historyView};
+      if (historyView === "watch") state.tab = watchTab || "movie";
+      history.pushState(state, "", url);
     }
   }
   
@@ -239,5 +242,9 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
   document.querySelectorAll("#app-shell [data-view], #view-home [data-view], #app-dock [data-view]").forEach(el=>{
     el.addEventListener("click", ev=>{ ev.preventDefault(); show(el.getAttribute("data-view"), true); });
   });
-  window.addEventListener("popstate", ev=> show((ev.state&&ev.state.view)||requestedInitialView(), false));
-  show(requestedInitialView(), false);
+  window.addEventListener("popstate", ev=>{
+    const route = routeFromHistory(ev.state, location.search);
+    show(route.view, false, route.tab);
+  });
+  const initialRoute = routeFromSearch(location.search);
+  show(initialRoute.view, false, initialRoute.tab);

@@ -18,12 +18,13 @@ globalThis.fetchAllProviders = async function fetchAllProviders(){
     return list;
   } catch(e){ return []; }
 }
-globalThis.buildProviderLauncher = async function buildProviderLauncher(containerId, limit=12){
+globalThis.buildProviderLauncher = async function buildProviderLauncher(containerId, limit=12, navigationToken=watchNavigationGeneration){
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = "";
   for (let i=0;i<limit;i++){ const sk = document.createElement("div"); sk.className = "skel"; sk.style.cssText = "width:72px;height:72px;border-radius:20px;"; el.appendChild(sk); }
   const providers = await fetchAllProviders();
+  if (!isCurrentWatchNavigation(navigationToken) || !el.isConnected) return;
   if (!providers.length){ el.innerHTML = '<div class="loader small" style="grid-column:1/-1;padding:14px 0;">Couldn\'t load providers.</div>'; return; }
   el.innerHTML = "";
   providers.slice(0, limit).forEach((p, i) => {
@@ -37,7 +38,12 @@ globalThis.buildProviderLauncher = async function buildProviderLauncher(containe
     btn.innerHTML = '<div class="provider-app-icon">' +
       (p.logo ? '<img src="' + providerLogo(p.logo,"w92") + '" alt="' + p.name + '" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'pa-fallback\',textContent:\'' + initials + '\'}))">' : '<span class="pa-fallback">' + initials + '</span>') +
       '</div><div class="provider-app-name">' + p.name + '</div>';
-    btn.onclick = () => { btn.style.transform = "translateY(-2px) scale(.94)"; setTimeout(() => renderProviderHome({id:p.id, name:p.name}), 90); };
+    btn.onclick = () => {
+      btn.style.transform = "translateY(-2px) scale(.94)";
+      setTimeout(() => {
+        if (isCurrentWatchNavigation(navigationToken) && btn.isConnected) renderProviderHome({id:p.id, name:p.name});
+      }, 90);
+    };
     el.appendChild(btn);
   });
 }
@@ -88,8 +94,10 @@ globalThis.exitProvMode = function exitProvMode(){
 globalThis.provToken= 0;
 globalThis.renderProviderHome = async function renderProviderHome(prov){
   const myToken = ++provToken;
+  const navigationToken = watchNavigationGeneration;
+  const current = () => myToken === provToken && isCurrentWatchNavigation(navigationToken);
   await ensureGenres();
-  if (myToken !== provToken) return;
+  if (!current()) return;
   const main = document.getElementById("mainContent");
   const hero = document.getElementById("hero");
   const design = getProviderDesign(prov.name);
@@ -106,7 +114,7 @@ globalThis.renderProviderHome = async function renderProviderHome(prov){
     const found = list.find(p => p.id == pid) || list.find(p => p.name.toLowerCase() === prov.name.toLowerCase());
     if (found){ pid = found.id; logoPath = found.logo; provName = found.name; }
   } catch(e){}
-  if (myToken !== provToken) return;
+  if (!current()) return;
 
   const topBar = document.createElement("div");
   topBar.className = "prov-home-bar";
@@ -133,7 +141,7 @@ globalThis.renderProviderHome = async function renderProviderHome(prov){
     ]);
     featured = mergeTwo(m, t, cmpPop);
   } catch(e){}
-  if (myToken !== provToken) return;
+  if (!current()) return;
   const pick = featured.find(r => r.backdrop_path) || featured[0];
 
   let heroHtml = '<div class="hero-content">';
@@ -268,11 +276,13 @@ globalThis.getProviderTagline = function getProviderTagline(key, name){
   return lines[key] || ("Streaming on " + name + " in " + REGION + ".");
 }
 globalThis.buildDisneyBrandRow = function buildDisneyBrandRow(pid){
+  const navigationToken = watchNavigationGeneration;
   const sec = document.createElement("div");
   sec.className = "section";
   sec.innerHTML = '<div class="section-head"><div><h2>Explore</h2><p>Brands and collections</p></div></div><div class="brand-hubs" id="disneyBrandHubs"></div>';
   setTimeout(() => {
-    const el = document.getElementById("disneyBrandHubs");
+    if (!isCurrentWatchNavigation(navigationToken) || !sec.isConnected) return;
+    const el = sec.querySelector("#disneyBrandHubs");
     if (!el) return;
     el.innerHTML = DISNEY_BRANDS.map((b,i) => '<div class="brand-tile anim-pop" style="animation-delay:' + (i*40) + 'ms; background:' + b.bg + ';" data-cid="' + b.cid + '" data-label="' + b.label + '"><span style="color:' + b.color + ';letter-spacing:.05em;">' + b.label.toUpperCase() + '</span></div>').join("");
     el.querySelectorAll(".brand-tile").forEach(t => { t.onclick = () => showDisneyBrandGrid(t.dataset.label, t.dataset.cid, pid); });
@@ -281,17 +291,23 @@ globalThis.buildDisneyBrandRow = function buildDisneyBrandRow(pid){
 }
 globalThis.showDisneyBrandGrid = async function showDisneyBrandGrid(brand, cid, pid){
   const grid = openGrid("Disney+ · " + brand);
+  const requestToken = gridRequestGeneration;
   try {
     const base = { with_watch_providers: pid, watch_region: REGION, with_watch_monetization_types: "flatrate", with_companies: cid, sort_by: "popularity.desc", include_adult: false };
     const [m,t] = await Promise.all([tmdb("/discover/movie", base), tmdb("/discover/tv", base)]);
+    if (!currentGridRequest(requestToken, grid)) return;
     const items = mergeTwo(m.results.map(x=>({...x,media_type:"movie"})), t.results.map(x=>({...x,media_type:"tv"})), cmpPop).slice(0, 60);
     grid.innerHTML=""; items.forEach((i,idx)=>grid.appendChild(card(i, {}, idx)));
-  } catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showDisneyBrandGrid(brand, cid, pid), requestToken);
+  }
 }
 
 globalThis.showProviderGrid = async function showProviderGrid(prov, pid, kind){
   const titles = {trending:prov.name+" · Trending", movie:"Movies on "+prov.name, tv:"TV on "+prov.name, kids:"Kids on "+prov.name, top:"Top Rated on "+prov.name, new:"New on "+prov.name};
   const grid = openGrid(titles[kind]);
+  const requestToken = gridRequestGeneration;
   try {
     const design = getProviderDesign(prov.name);
     const cfg = { ...DEFAULT_PROVIDER_CONTENT, ...(PROVIDER_CONTENT[design.key] || {}) };
@@ -320,8 +336,12 @@ globalThis.showProviderGrid = async function showProviderGrid(prov, pid, kind){
       const [m,t] = await Promise.all([provDiscoverSafe(pid, REGION, "movie", { ...trendCfg, sortBy: "popularity.desc" }), provDiscoverSafe(pid, REGION, "tv", { ...trendCfg, sortBy: "popularity.desc" })]);
       items = mergeTwo(m, t, cmpPop);
     }
+    if (!currentGridRequest(requestToken, grid)) return;
     grid.innerHTML=""; items.slice(0,60).forEach((i,idx)=>grid.appendChild(card(i, {kids:kind==="kids"}, idx)));
-  } catch(e){ grid.innerHTML = '<div class="loader err">Couldn\'t load.</div>'; }
+  } catch {
+    if (!currentGridRequest(requestToken, grid)) return;
+    showGridRequestError(grid, () => showProviderGrid(prov, pid, kind), requestToken);
+  }
 }
 
 /* ================= MOVIE / TV / ANIME TABS ================= */

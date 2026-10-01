@@ -1,6 +1,7 @@
 import "../../../services/storage.js";
-globalThis.buildMovieTab = async function buildMovieTab(){
+globalThis.buildMovieTab = async function buildMovieTab(navigationToken = watchNavigationGeneration){
   await ensureGenres();
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const main = document.getElementById("mainContent"); exitProvMode(); main.innerHTML = "";
   main.appendChild(sectionEl("m_theaters","In Theaters","Currently playing", ()=>showSpecial("now_movie")));
   main.appendChild(sectionEl("m_new","New Releases","Latest releases", ()=>showSpecial("new_movie")));
@@ -12,7 +13,7 @@ globalThis.buildMovieTab = async function buildMovieTab(){
   gs.innerHTML = '<div class="section-head"><h2>Browse Movies by Genre</h2></div>';
   gs.appendChild(genreChipsBar(genresMovie, g => showGenreGrid(g,"movie")));
   main.appendChild(gs);
-  buildHero(async ()=> (await tmdb("/trending/movie/week")).results, "TRENDING MOVIES");
+  buildHero(async ()=> (await tmdb("/trending/movie/week")).results, "TRENDING MOVIES", navigationToken);
   loadRail("m_theaters", async ()=> (await tmdb("/movie/now_playing",{region:REGION})).results.map(x=>({...x,media_type:"movie"})));
   loadRail("m_new", async ()=> (await tmdb("/discover/movie",{sort_by:"primary_release_date.desc","primary_release_date.lte":TODAY,"vote_count.gte":30,include_adult:false})).results.map(x=>({...x,media_type:"movie"})));
   loadRail("m_upcoming", async ()=> (await tmdb("/movie/upcoming",{region:REGION})).results.map(x=>({...x,media_type:"movie"})));
@@ -20,8 +21,9 @@ globalThis.buildMovieTab = async function buildMovieTab(){
   loadRail("m_pop", async ()=> (await tmdb("/movie/popular")).results.map(x=>({...x,media_type:"movie"})));
   loadRail("m_top", async ()=> (await tmdb("/movie/top_rated")).results.map(x=>({...x,media_type:"movie"})));
 }
-globalThis.buildTVTab = async function buildTVTab(){
+globalThis.buildTVTab = async function buildTVTab(navigationToken = watchNavigationGeneration){
   await ensureGenres();
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const main = document.getElementById("mainContent"); exitProvMode(); main.innerHTML = "";
   main.appendChild(sectionEl("t_airing","Airing Today","Episodes dropping today", ()=>showSpecial("airing_tv")));
   main.appendChild(sectionEl("t_onair","On The Air","Currently airing", ()=>showSpecial("onair_tv")));
@@ -33,7 +35,7 @@ globalThis.buildTVTab = async function buildTVTab(){
   gs.innerHTML = '<div class="section-head"><h2>Browse TV by Genre</h2></div>';
   gs.appendChild(genreChipsBar(genresTV, g => showGenreGrid(g,"tv")));
   main.appendChild(gs);
-  buildHero(async ()=> (await tmdb("/trending/tv/week")).results, "TRENDING TV SHOWS");
+  buildHero(async ()=> (await tmdb("/trending/tv/week")).results, "TRENDING TV SHOWS", navigationToken);
   loadRail("t_airing", async ()=> (await tmdb("/tv/airing_today")).results.map(x=>({...x,media_type:"tv"})));
   loadRail("t_onair", async ()=> (await tmdb("/tv/on_the_air")).results.map(x=>({...x,media_type:"tv"})));
   loadRail("t_new", async ()=> (await tmdb("/discover/tv",{sort_by:"first_air_date.desc","first_air_date.lte":TODAY,"vote_count.gte":15,include_adult:false})).results.map(x=>({...x,media_type:"tv"})));
@@ -48,7 +50,8 @@ globalThis.animeDiscover = async function animeDiscover(extra={}, kind="both"){
   const res = await Promise.all(calls);
   return extra.sort_by && extra.sort_by.includes("date") ? mergeTwo(res[0]||[], res[1]||[], cmpDate) : mergeTwo(res[0]||[], res[1]||[], cmpRating);
 }
-globalThis.buildAnimeTab = async function buildAnimeTab(){
+globalThis.buildAnimeTab = async function buildAnimeTab(navigationToken = watchNavigationGeneration){
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const main = document.getElementById("mainContent"); exitProvMode(); main.innerHTML = "";
   main.appendChild(sectionEl("a_new","New Anime Releases","Freshly released", ()=>showAnime("new")));
   main.appendChild(sectionEl("a_hits","Popular Anime","Biggest hits", ()=>showAnime("popular")));
@@ -59,7 +62,7 @@ globalThis.buildAnimeTab = async function buildAnimeTab(){
   gs.innerHTML = '<div class="section-head"><h2>Browse Anime by Genre</h2></div>';
   gs.appendChild(genreChipsBar(ANIME_SUBGENRES, g => showAnimeGenreGrid(g)));
   main.appendChild(gs);
-  buildHero(async ()=> animeDiscover({sort_by:"popularity.desc"}), "TRENDING ANIME");
+  buildHero(async ()=> animeDiscover({sort_by:"popularity.desc"}), "TRENDING ANIME", navigationToken);
   loadRail("a_new", async ()=> (await animeDiscover({sort_by:"first_air_date.desc","first_air_date.lte":TODAY,"vote_count.gte":5})).slice(0,14));
   loadRail("a_hits", async ()=> (await animeDiscover({sort_by:"popularity.desc"})).slice(0,14));
   loadRail("a_airing", async ()=> (await animeDiscover({sort_by:"popularity.desc","first_air_date.lte":TODAY,"vote_count.gte":10},"tv")).slice(0,14));
@@ -68,7 +71,8 @@ globalThis.buildAnimeTab = async function buildAnimeTab(){
 }
 
 /* ================= APPS TAB ================= */
-globalThis.buildHubsTab = async function buildHubsTab(){
+globalThis.buildHubsTab = async function buildHubsTab(navigationToken = watchNavigationGeneration){
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const main = document.getElementById("mainContent");
   exitProvMode();
   document.getElementById("hero").innerHTML =
@@ -84,9 +88,11 @@ globalThis.buildHubsTab = async function buildHubsTab(){
   const hubContainer = document.createElement("div");
   hubContainer.id = "hubContainer";
   main.appendChild(hubContainer);
-  buildProviderLauncher("hubsLauncher", 24);
+  buildProviderLauncher("hubsLauncher", 24, navigationToken);
   const providers = (await fetchAllProviders()).slice(0, 12);
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   for (const p of providers){
+    if (!isCurrentWatchNavigation(navigationToken)) return;
     const design = getProviderDesign(p.name);
     const sec = document.createElement("div");
     sec.className = "hub-section";
@@ -108,8 +114,12 @@ globalThis.buildHubsTab = async function buildHubsTab(){
       const design = getProviderDesign(p.name);
       const cfg = { ...DEFAULT_PROVIDER_CONTENT, ...(PROVIDER_CONTENT[design.key] || {}) };
       const [m,t] = await Promise.all([provDiscoverSafe(p.id, REGION, "movie", { ...cfg, sortBy: "popularity.desc" }), provDiscoverSafe(p.id, REGION, "tv", { ...cfg, sortBy: "popularity.desc" })]);
+      if (!isCurrentWatchNavigation(navigationToken)) return;
       railInto(el, mergeTwo(m, t, cmpPop).slice(0, 16));
-    } catch(e){ el.innerHTML = '<div class="loader err small">Couldn\'t load ' + p.name + '.</div>'; }
+    } catch(e){
+      if (!isCurrentWatchNavigation(navigationToken)) return;
+      el.innerHTML = '<div class="loader err small">Couldn\'t load ' + p.name + '.</div>';
+    }
   }
 }
 

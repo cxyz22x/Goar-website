@@ -1,10 +1,12 @@
 import "../../../services/storage.js";
-globalThis.buildHero = async function buildHero(fetcher, eyebrow){
+globalThis.buildHero = async function buildHero(fetcher, eyebrow, navigationToken = watchNavigationGeneration){
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const heroEl = document.getElementById("hero");
   heroEl.innerHTML = '<div class="loader">Loading…</div>';
   heroEl.style.backgroundImage = "";
   try {
     const items = await fetcher();
+    if (!isCurrentWatchNavigation(navigationToken)) return;
     const pick = items.find(r => r.backdrop_path) || items[0];
     if (!pick){ heroEl.innerHTML = '<div class="loader">Nothing to show yet.</div>'; return; }
     const t = typeOf(pick);
@@ -21,6 +23,7 @@ globalThis.buildHero = async function buildHero(fetcher, eyebrow){
     document.getElementById("watchHeroPlay").onclick = () => openPlayer(pick.id, realType, titleOf(pick), pick);
     document.getElementById("heroDetails").onclick = () => openModal(pick.id, realType);
   } catch {
+    if (!isCurrentWatchNavigation(navigationToken)) return;
     heroEl.replaceChildren();
     const error = document.createElement("div");
     error.className = "loader err";
@@ -30,7 +33,7 @@ globalThis.buildHero = async function buildHero(fetcher, eyebrow){
     retry.type = "button";
     retry.className = "btn btn-ghost";
     retry.textContent = "Retry";
-    retry.onclick = () => buildHero(fetcher, eyebrow);
+    retry.onclick = () => buildHero(fetcher, eyebrow, navigationToken);
     error.appendChild(retry);
     heroEl.appendChild(error);
   }
@@ -51,6 +54,7 @@ globalThis.ensureGenres = async function ensureGenres(){
   }
 }
 globalThis.genreChipsBar = function genreChipsBar(list, onPick){
+  const navigationToken = watchNavigationGeneration;
   const div = document.createElement("div"); div.className = "chips";
   if (!list.length && genreLoadError){
     const message = document.createElement("p");
@@ -63,6 +67,7 @@ globalThis.genreChipsBar = function genreChipsBar(list, onPick){
     retry.textContent = "Retry genre filters";
     retry.onclick = async () => {
       await ensureGenres();
+      if (!isCurrentWatchNavigation(navigationToken) || !div.isConnected) return;
       const nextList = activeTab === "tv" ? genresTV : genresMovie;
       div.replaceWith(genreChipsBar(nextList, onPick));
     };

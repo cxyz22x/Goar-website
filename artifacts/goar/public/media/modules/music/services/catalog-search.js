@@ -10,7 +10,28 @@ globalThis.fetchAny = async function fetchAny(url, opts={}, timeout=16000){
   try{ return await fetch(url, Object.assign({},opts,{signal:ctrl.signal})); } finally{ clearTimeout(t); }
 }
 
-globalThis.state={ view:"home", viewHistory:[], shuffleHistory:[], tops:S.get("tops",TOP_SEED.slice()), news:S.get("news",NEW_SEED.slice()), list:S.list().length?S.list():TOP_SEED.slice(), i:0, playing:false, token:0, skip:0 };
+const storedTracks=S.list();
+const savedTracks=Array.isArray(storedTracks)?storedTracks:[];
+globalThis.state={ view:"home", viewHistory:[], shuffleHistory:[], tops:S.get("tops",TOP_SEED.slice()), news:S.get("news",NEW_SEED.slice()), list:savedTracks.slice(), queueGeneration:0, queueTouched:false, queueSeedable:savedTracks.length===0, i:0, playing:false, token:0, skip:0 };
+globalThis.musicMarkQueueIntent=function musicMarkQueueIntent(){
+  state.queueGeneration=(state.queueGeneration||0)+1;
+  state.queueTouched=true;
+  state.queueSeedable=false;
+}
+globalThis.musicSetQueue=function musicSetQueue(items){
+  musicMarkQueueIntent();
+  state.list=Array.isArray(items)?items.slice():[];
+  return state.list;
+}
+globalThis.musicSeedQueueIfUntouched=function musicSeedQueueIfUntouched(items,generation,eligibleAtStart){
+  if(!eligibleAtStart||!state.queueSeedable||state.queueTouched||state.queueGeneration!==generation||state.list.length||S.list().length) return false;
+  const queue=Array.isArray(items)?items.slice():[];
+  if(!queue.length) return false;
+  state.list=queue;
+  state.i=0;
+  state.queueSeedable=false;
+  return true;
+}
 globalThis.media=music_musicQuery("#player");
 globalThis.engine={ hls:null, blob:null, kind:"" };
 const initialVolume=Number(S.prefs().vol);

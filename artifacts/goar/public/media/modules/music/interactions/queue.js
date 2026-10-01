@@ -38,6 +38,7 @@ globalThis.playAt = async function playAt(i, auto){
   if(!state.list.length) return;
   const index=Number(i);
   if(!Number.isInteger(index)) return;
+  musicMarkQueueIntent();
   state.i=(index+state.list.length)%state.list.length;
   const song=current(), my=++state.token;
   state.playing=false;

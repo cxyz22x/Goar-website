@@ -1,6 +1,7 @@
 import "../../../services/storage.js";
-globalThis.buildHome = async function buildHome(){
+globalThis.buildHome = async function buildHome(navigationToken = watchNavigationGeneration){
   await ensureGenres();
+  if (!isCurrentWatchNavigation(navigationToken)) return;
   const main = document.getElementById("mainContent");
   exitProvMode();
   main.innerHTML = "";
@@ -9,6 +10,7 @@ globalThis.buildHome = async function buildHome(){
     const cw = sectionEl("h_continue","Continue Watching","Pick up where you left off", null);
     main.appendChild(cw);
     setTimeout(() => {
+      if (!isCurrentWatchNavigation(navigationToken)) return;
       const el = document.getElementById("h_continue");
       if (!el) return;
       el.innerHTML = "";
@@ -27,7 +29,11 @@ globalThis.buildHome = async function buildHome(){
     '<div class="section-head"><div><h2>Your Apps</h2><p>Tap a service to open its own home screen</p></div><span class="see-all" id="seeAllProviders">See all →</span></div>' +
     '<div class="provider-launcher" id="homeProviderLauncher"></div>';
   main.appendChild(launcherSec);
-  setTimeout(()=>{ const el = document.getElementById("seeAllProviders"); if (el) el.onclick = () => routeTo("hubs"); }, 0);
+  setTimeout(()=>{
+    if (!isCurrentWatchNavigation(navigationToken)) return;
+    const el = document.getElementById("seeAllProviders");
+    if (el) el.onclick = () => routeTo("hubs");
+  }, 0);
 
   main.appendChild(sectionEl("h_top10","Top 10 This Week","Most popular across movies & TV", ()=>showSpecial("trending")));
   main.appendChild(sectionEl("h_new","New Releases","Freshly out", ()=>showSpecial("new")));
@@ -42,7 +48,7 @@ globalThis.buildHome = async function buildHome(){
   gs.appendChild(genreChipsBar(dedupeGenres([...genresMovie, ...genresTV]), g => showGenreGrid(g,"all")));
   main.appendChild(gs);
 
-  buildHero(async ()=> (await tmdb("/trending/all/week")).results, "TRENDING THIS WEEK");
+  buildHero(async ()=> (await tmdb("/trending/all/week")).results, "TRENDING THIS WEEK", navigationToken);
   loadRail("h_top10", async ()=> (await tmdb("/trending/all/week")).results.slice(0,10), {top10:true});
   loadRail("h_new", async () => {
     const [m,t] = await Promise.all([
@@ -60,7 +66,7 @@ globalThis.buildHome = async function buildHome(){
   loadRail("h_kids", async ()=> (await kidsDiscover({sort_by:"popularity.desc"})).slice(0,14), {kids:true});
   loadRail("h_music", async ()=> (await musicDiscover({sort_by:"popularity.desc"})).slice(0,14), {music:true});
 
-  buildProviderLauncher("homeProviderLauncher", 12);
+  buildProviderLauncher("homeProviderLauncher", 12, navigationToken);
 }
 
 /* ================= PROVIDER LAUNCHER ================= */

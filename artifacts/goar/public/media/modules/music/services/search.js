@@ -23,6 +23,8 @@ globalThis.searchSongs = async function searchSongs(q){
   return [];
 }
 globalThis.loadLiveCatalog = async function loadLiveCatalog(){
+  const queueGeneration=state.queueGeneration||0;
+  const maySeedQueue=state.queueSeedable&&!state.queueTouched&&!state.list.length&&!S.list().length;
   const tops=[], news=[];
   for(const pid of TOP_PLAYLISTS){ const rows=await playlistSongs(pid); tops.push(...rows); if(uniqSongs(tops).length>=16) break; }
   try{ const tr=await invGet("/api/v1/trending?type=music&region=US"); tops.push(...uniqSongs(Array.isArray(tr)?tr:[])); }catch{}
@@ -32,7 +34,9 @@ globalThis.loadLiveCatalog = async function loadLiveCatalog(){
   const n=uniqSongs(news.concat(NEW_SEED));
   if(t.length){ state.tops=t.slice(0,40); S.set("tops",state.tops); }
   if(n.length){ state.news=n.slice(0,40); S.set("news",state.news); }
-  if(!S.list().length) state.list=state.tops.slice();
+  if(maySeedQueue&&musicSeedQueueIfUntouched(state.tops,queueGeneration,maySeedQueue)){
+    if(typeof paintNow==="function") paintNow();
+  }
 }
 
 
