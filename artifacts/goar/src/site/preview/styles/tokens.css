@@ -26,7 +26,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .gp:not([data-theme="dark"]) {
+  .gp[data-theme="light"] {
     --bg: var(--paper);
     --bg-lift: var(--paper-lift);
     --panel: var(--paper-panel);

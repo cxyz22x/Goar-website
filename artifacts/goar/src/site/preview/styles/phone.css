@@ -1,6 +1,7 @@
 .gp{
 /* Phone */
 .phone {
+  filter: grayscale(1);
   border-radius: 36px;
   border: 1px solid var(--line);
   background: var(--bg-lift);

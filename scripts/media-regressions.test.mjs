@@ -7,17 +7,19 @@ import test from "node:test";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const workspace = resolve(scriptDir, "..");
 const mediaRoot = resolve(workspace, "artifacts/goar/public/media");
+const latestRoot = resolve(workspace, "artifacts/goar/public/pages");
 const sourceHtml = await readFile(resolve(workspace, "attached_assets/goar_(16)_1790817694377.html"), "utf8");
 const readMedia = (path) => readFile(resolve(mediaRoot, path), "utf8");
+const readLatest = (path) => readFile(resolve(latestRoot, path), "utf8");
 
 test("media styles cover every maintained surface and control after the requested redesign", async () => {
   const names = ["watch", "music", "shell", "games", "overrides"];
   const files = await Promise.all(names.map((name) => readMedia(`styles/${name}.css`)));
   const required = [
     [".hero", ".rail", ".card"],
-    [".goar-music", ".sidebar", ".transport"],
-    ["#app-shell", "#view-home"],
-    ["#gamesWrap", "#gamePlay", ".game-library-head"],
+    ["#view-music.on", ".sidebar", ".controls"],
+    ["#view-home .lead", "#view-home"],
+    ["#view-games .ggrid", "#gamePlay", ".game-library-head"],
     ["#app-dock"],
   ];
   for (let index = 0; index < files.length; index++) {
@@ -214,4 +216,43 @@ test("all generated relative JavaScript imports resolve", async () => {
     }
   }
   assert.deepEqual(unresolved, [], "all generated module boundaries must resolve");
+});
+
+test("the latest Watch, Music, Games, Live, and Anime pages stay self-contained under the artifact base", async () => {
+  const services = ["watch", "music", "games", "live", "anime"];
+  for (const service of services) {
+    const html = await readLatest(`${service}/index.html`);
+    assert.ok(html.includes(`${service}.css`), `${service} must load its own stylesheet`);
+    assert.ok(html.includes(`${service}.js`), `${service} must load its own page logic`);
+    assert.ok(html.includes("../../shared/float.css") && html.includes("../../shared/float.js"), `${service} must load the shared menu relative to the artifact base`);
+    assert.ok(html.includes('href="../../index.html"'), `${service} must link back to the existing Goar homepage`);
+    await access(resolve(latestRoot, service, `${service}.css`));
+    await access(resolve(latestRoot, service, `${service}.js`));
+  }
+  const catalogue = JSON.parse(await readFile(resolve(workspace, "artifacts/goar/public/games.json"), "utf8"));
+  assert.ok(Array.isArray(catalogue) && catalogue.length > 0, "Games must have its supplied local catalogue");
+  const games = await readLatest("games/games.js");
+  assert.ok(games.includes('"../../games.json"'), "Games must fetch its catalogue within the artifact base path");
+  const watch = await readLatest("watch/watch.js");
+  assert.ok(!watch.includes("serviceWorker"), "the imported pages must not register a root-scoped service worker");
+  const floatingMenu = await readFile(resolve(workspace, "artifacts/goar/public/shared/float.js"), "utf8");
+  assert.ok(floatingMenu.includes('new URL("agent", ROOT)'), "the shared service menu must provide the existing agent");
+  assert.ok(floatingMenu.includes('new URL("index.html", ROOT)'), "the shared service menu must link to the existing homepage");
+});
+
+test("the existing Goar homepage defaults to dark monochrome without overriding saved theme choice", async () => {
+  const [app, theme, tokens, navigation, footer] = await Promise.all([
+    readFile(resolve(workspace, "artifacts/goar/src/App.tsx"), "utf8"),
+    readFile(resolve(workspace, "artifacts/goar/src/site/preview/data/useTheme.ts"), "utf8"),
+    readFile(resolve(workspace, "artifacts/goar/src/site/preview/styles/tokens.css"), "utf8"),
+    readFile(resolve(workspace, "artifacts/goar/src/site/components/Navigation.tsx"), "utf8"),
+    readFile(resolve(workspace, "artifacts/goar/src/site/components/Footer.tsx"), "utf8"),
+  ]);
+  assert.ok(app.includes('<Route path="/" component={Home} />'), "the React marketing page must remain at /");
+  assert.ok(theme.includes("readStored() ?? 'dark'"), "a fresh visit must default to dark");
+  assert.ok(theme.includes("s === 'light' || s === 'dark'"), "an explicit saved theme must be retained");
+  assert.ok(tokens.includes('.gp[data-theme="light"]'), "light remains available only as an explicit theme choice");
+  for (const page of ["watch", "music", "games", "live", "anime"]) {
+    assert.ok(navigation.includes(`pages/${page}/index.html`) || footer.includes(`pages/${page}/index.html`), `${page} must be linked from the Goar site`);
+  }
 });

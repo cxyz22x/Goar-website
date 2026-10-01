@@ -7,9 +7,11 @@ export function Footer() {
       <span>Goar · Android AI workspace</span>
       <div className="footer-links">
         <Link href="/agent">Agent</Link>
-        <a href={`${BASE}media/index.html?view=watch`}>Watch</a>
-        <a href={`${BASE}media/index.html?view=music`}>Music</a>
-        <a href={`${BASE}media/index.html?view=games`}>Games</a>
+        <a href={`${BASE}pages/watch/index.html?tab=movie`}>Watch</a>
+        <a href={`${BASE}pages/music/index.html`}>Music</a>
+        <a href={`${BASE}pages/games/index.html`}>Games</a>
+        <a href={`${BASE}pages/live/index.html`}>Live</a>
+        <a href={`${BASE}pages/anime/index.html`}>Anime</a>
         {footerLinks.map(([h, l]) => <Link key={h} href={h}>{l}</Link>)}
       </div>
     </footer>

@@ -21,9 +21,23 @@ const queryClient = new QueryClient();
 
 /** Static media documents need a real navigation, not a SPA-only URL change. */
 function OpenMedia({ view }: { view: string }) {
-  const destination = new URL(`${import.meta.env.BASE_URL}media/index.html`, window.location.origin);
-  destination.search = window.location.search;
-  destination.searchParams.set('view', view);
+  const BASE = import.meta.env.BASE_URL;
+  const watchTabs = new Set(['movie', 'tv', 'kids', 'anime', 'music', 'live', 'list', 'hubs']);
+  const page = view === 'home' || view === 'media' ? 'home'
+    : view === 'games' ? 'games'
+      : view === 'music' ? 'music'
+        : view === 'live' ? 'live'
+          : view === 'anime' ? 'anime' : 'watch';
+  const destination = new URL(`${BASE}pages/${page}/index.html`, window.location.origin);
+  const query = new URLSearchParams(window.location.search);
+  query.delete('view');
+  query.delete('v');
+  if (page === 'watch') {
+    const tab = view === 'tv' ? 'tv' : view === 'kids' ? 'kids' : view === 'hubs' ? 'hubs' : view === 'list' ? 'list' : 'movie';
+    const requestedTab = query.get('tab');
+    query.set('tab', requestedTab && watchTabs.has(requestedTab) ? requestedTab : tab);
+  }
+  destination.search = query.toString();
   useEffect(() => { window.location.replace(destination.href); }, [destination.href]);
   return <p role="status">Opening media… <a href={destination.href}>Continue</a></p>;
 }

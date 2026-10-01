@@ -13,15 +13,19 @@ export const docLinks = [
 /* Connected website services, added as entry points beside the source links. */
 export const serviceLinks = [
   { href: '/agent', label: 'Agent', internal: true },
-  { href: `${BASE}media/index.html?view=watch`, label: 'Watch', internal: false },
-  { href: `${BASE}media/index.html?view=music`, label: 'Music', internal: false },
-  { href: `${BASE}media/index.html?view=games`, label: 'Games', internal: false },
+  { href: `${BASE}pages/watch/index.html?tab=movie`, label: 'Watch', internal: false },
+  { href: `${BASE}pages/music/index.html`, label: 'Music', internal: false },
+  { href: `${BASE}pages/games/index.html`, label: 'Games', internal: false },
+  { href: `${BASE}pages/live/index.html`, label: 'Live', internal: false },
+  { href: `${BASE}pages/anime/index.html`, label: 'Anime', internal: false },
 ] as const;
 
 export const mediaViews = [
-  { href: `${BASE}media/index.html?view=watch`, label: 'Watch' },
-  { href: `${BASE}media/index.html?view=music`, label: 'Music' },
-  { href: `${BASE}media/index.html?view=games`, label: 'Games' },
+  { href: `${BASE}pages/watch/index.html?tab=movie`, label: 'Watch' },
+  { href: `${BASE}pages/music/index.html`, label: 'Music' },
+  { href: `${BASE}pages/games/index.html`, label: 'Games' },
+  { href: `${BASE}pages/live/index.html`, label: 'Live' },
+  { href: `${BASE}pages/anime/index.html`, label: 'Anime' },
 ] as const;
 
 export const phoneMessages = [

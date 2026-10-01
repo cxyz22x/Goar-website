@@ -10,14 +10,13 @@ function readStored(): Theme {
   } catch { return null; }
 }
 
-/* Source behaviour: stored choice sets data-theme; toggle flips it, honouring the OS preference when none is set. */
+/* Keep a saved choice; a fresh visit starts in the requested dark theme. */
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(readStored);
+  const [theme, setTheme] = useState<Theme>(() => readStored() ?? 'dark');
   const rootRef = useRef<HTMLDivElement>(null);
   const toggle = useCallback(() => {
     setTheme((cur) => {
-      let next: 'light' | 'dark' = cur === 'light' ? 'dark' : 'light';
-      if (!cur) next = window.matchMedia('(prefers-color-scheme: light)').matches ? 'dark' : 'light';
+      const next: 'light' | 'dark' = cur === 'dark' ? 'light' : 'dark';
       try { localStorage.setItem(THEME_KEY, next); } catch { /* storage unavailable */ }
       return next;
     });

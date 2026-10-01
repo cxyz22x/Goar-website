@@ -13,9 +13,9 @@ A Goar product website with connected online-agent, media, music and games servi
 - Product pages and launch page live in `artifacts/goar/src/site`.
 - Connection cards and app-facing link instructions live in `artifacts/goar/src/connections`, at `/connections`.
 - The authored agent wrapper is in `artifacts/goar/src/agent`, at `/agent`; the original supplied application is served unchanged at `/workspace/index.html`.
-- The modular media service is served at `/media/index.html`, with `?view=watch`, `?view=music` and `?view=games` entry links.
-- Media HTML templates, view controllers, interactions, adapters, catalogue data and styles are separate files under `artifacts/goar/public/media`. They are composed by its ES-module entry, not imported into the marketing app.
-- `scripts/media-modularize.mjs` reproduces the extracted modules from the preserved media upload. Keep fixes in the generator as well as generated files so regeneration cannot revert them.
+- The latest supplied media pages are standalone documents at `/pages/watch`, `/pages/music`, `/pages/games`, `/pages/live` and `/pages/anime`. Their shared menu and game catalogue are under `artifacts/goar/public/shared` and `artifacts/goar/public/games.json`.
+- Keep the existing React marketing page at `/`; do not substitute the archive's media overview for it. The marketing page defaults to matte black and bone white, while an explicitly saved light-theme preference is retained.
+- The earlier extracted media app and its module regression checks remain under `artifacts/goar/public/media`; they are separate from the latest standalone pages.
 - Original legal text is extracted into `artifacts/goar/src/data/legal.json`.
 
 ## Scope
@@ -25,7 +25,7 @@ A Goar product website with connected online-agent, media, music and games servi
 - Do not represent Android-only capabilities as implemented in this browser build.
 - No APK or verified store URL has been supplied. Do not invent download links.
 - Original contact address needs confirmation before publishing.
-- The latest main-page reference is `attached_assets/goar_preview_1790871320377.html`; it supersedes `goar_v5.html` for the homepage. Preserve its design, source interactions and content. Keep the media upload’s original Inter/Space Grotesk interface as well. Modularisation is not permission to redesign either.
+- The latest main-page reference is `attached_assets/goar_preview_1790871320377.html`; it supersedes `goar_v5.html` for the homepage. Preserve its design, source interactions and content. Keep the media pages' supplied interfaces and behavior; adapt their local links to work under the artifact base path and return to Goar's `/` and `/agent`.
 - App-facing links are ordinary website URLs, not invented native deep links or MCP endpoints.
 
 ## Runtime boundary
