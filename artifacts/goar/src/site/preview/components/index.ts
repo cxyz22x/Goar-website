@@ -7,3 +7,4 @@ import '../styles/phone.css';
 import '../styles/sections.css';
 import '../styles/footer.css';
 import '../styles/responsive.css';
+import '../styles/goar-landing.css';
