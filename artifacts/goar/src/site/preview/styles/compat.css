@@ -1,0 +1,9 @@
+/* Restores the browser default element styles the source page relied on (Tailwind preflight resets them). */
+.gp p{margin-block:1em}
+.gp ul,.gp ol{margin-block:1em;padding-inline-start:40px;list-style:revert}
+.gp h1,.gp h2,.gp h3{font-size:revert}
+.gp code{font-family:monospace}
+.gp{min-height:100dvh;border:0}
+.gp button{border-width:0}
+html.gp-route{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html.gp-route{scroll-behavior:auto}}

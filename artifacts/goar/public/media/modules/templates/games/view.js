@@ -1,0 +1,1 @@
+export const gamesView = "<section id=\"view-games\">\n  <div class=\"gbar\">\n    <input id=\"gameSearch\" placeholder=\"Search 690 games\" autocomplete=\"off\" />\n    <div class=\"gchips\" id=\"gameCats\"></div>\n  </div>\n  <div id=\"gameGrid\" class=\"ggrid\"></div>\n</section>";

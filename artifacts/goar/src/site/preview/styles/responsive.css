@@ -1,0 +1,15 @@
+.gp{
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding-top: 2.5rem; }
+  .grid, .facts { grid-template-columns: 1fr 1fr; }
+  h1 { max-width: none; }
+}
+@media (max-width: 620px) {
+  .grid, .facts { grid-template-columns: 1fr; }
+  .phone { max-width: 360px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+}

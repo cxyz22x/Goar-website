@@ -1,0 +1,1 @@
+export const gamePlayer = "<div id=\"gamePlay\" hidden>\n    <div class=\"gp-bar\">\n      <button type=\"button\" id=\"gameBack\">← Library</button>\n      <b id=\"gameTitle\">Game</b>\n      <span id=\"gameStatus\"></span>\n    </div>\n    <iframe id=\"gameFrame\" title=\"Game\" allow=\"autoplay; fullscreen; gamepad; pointer-lock\" allowfullscreen></iframe>\n  </div>";

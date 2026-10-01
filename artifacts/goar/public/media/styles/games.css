@@ -1,0 +1,21 @@
+#gameTitle{font-family:"Space Grotesk",sans-serif;font-size:16px}
+#gameStatus{margin-left:auto;color:#8b8c98;font-size:12px;font-weight:600}
+#gameFrame{flex:1;width:100%;border:0;background:#000;min-height:0}
+body.playing-game #app-dock,body.playing-game #app-shell{display:none}
+
+/* one product */
+.gate{max-width:1180px}
+.kicker{letter-spacing:.22em;text-transform:uppercase;color:#ffc53d;font-weight:800;font-size:11px;margin-bottom:14px}
+#view-home h1{font-size:clamp(52px,7vw,92px);letter-spacing:-.04em}
+.home-tile{position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column;justify-content:space-between;transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;padding:22px}
+.home-tile:hover{transform:translateY(-6px);box-shadow:0 28px 60px #000a}
+.home-tile .tag{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
+.home-tile.movies .tag{color:#ffc53d}
+.home-tile.tv .tag{color:#b9d0ff}
+.home-tile.live .tag{color:#ffd0d8}
+.home-tile.music .tag{color:#f0c6ff}
+.home-tile.games .tag{color:#b8ffe4}
+.home-tile .go{margin-top:16px;align-self:flex-start;background:#fff;color:#07070c;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:800}
+.home-tiles{grid-template-columns:1.35fr 1fr 1fr}
+.home-tile.movies{grid-row:span 2;min-height:320px}
+#app-dock{margin:0 12px 10px;border:1px solid #ffffff14;border-radius:22px;position:sticky}

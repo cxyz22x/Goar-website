@@ -1,0 +1,46 @@
+#app-dock button[data-view="home"].on{background:#ffc53d;color:#1a1203}
+#app-dock button[data-view="movie"].on{background:#4d8dff}
+#app-dock button[data-view="tv"].on{background:#6d9bff}
+#app-dock button[data-view="live"].on{background:#ff4d6d}
+#app-dock button[data-view="music"].on{background:#e14dff}
+#app-dock button[data-view="games"].on{background:#2ee6a6;color:#042018}
+#view-watch > header{background:linear-gradient(to bottom,#07070cf2,transparent);padding-top:6px}
+#view-watch > header .logo{display:none}
+#view-watch nav{gap:8px}
+#view-watch nav a{border:0;padding:8px 14px;border-radius:999px;background:#16161f;color:#b7bdd0;font-weight:700;font-size:13px}
+#view-watch nav a.active{background:#fff;color:#07070c}
+.cat-chip,.chip{border-radius:999px}
+.cat-chip:hover,.chip:hover{border-color:#4d8dff;color:#fff}
+.search-wrap input,.region-select{border-radius:999px;background:#12121a}
+.hero{min-height:78vh;border-radius:0}
+.hero-title{letter-spacing:-.04em}
+.btn-primary,.btn-play{border-radius:999px;font-weight:800}
+.poster-wrap{border-radius:16px;box-shadow:0 10px 28px #0006}
+.card:hover .poster-wrap{box-shadow:0 18px 40px #000a}
+.section-head h2{font-size:28px;letter-spacing:-.03em}
+.provider-app-icon{border-radius:22px;box-shadow:0 10px 24px #0008, inset 0 0 0 1px #ffffff14}
+#view-games .gbar{background:#07070ce6;border-bottom-color:#2c2c3c}
+#view-games .gbar input{background:#12121a;border-color:#2c2c3c}
+.gchip.on{background:#2ee6a6;color:#042018;border-color:#2ee6a6}
+#view-games .ggrid > button{background:#14141c;border-color:#2c2c3c;border-radius:18px;transition:transform .2s}
+#view-games .ggrid > button:hover{transform:translateY(-4px)}
+.gp-bar{background:#07070cf2;border-bottom-color:#2c2c3c}
+#view-music{background:#07070c}
+#view-music .sidebar{background:transparent}
+#view-music .side-card{background:#12121a;border-color:#2c2c3c;border-radius:18px}
+#view-music .nav-btn.on{background:#e14dff22;color:#fff}
+#view-music .dock{background:#0c0c14ee;border-top:1px solid #2c2c3c}
+.pill-nav{background:#0c0c14ee;border-color:#ffffff18}
+.pill-item.active{background:#fff}
+@media(max-width:900px){
+  .home-tiles{grid-template-columns:1fr}
+  .home-tile.movies{grid-row:auto;min-height:220px}
+  #app-dock{margin:0;border-radius:0;border-left:0;border-right:0;border-bottom:0}
+}
+
+
+
+.media-service-links{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#9aa0b4}
+.media-service-links a{padding:7px 10px;border:1px solid #2c2c3c;border-radius:999px;white-space:nowrap}
+.media-service-links a:hover{color:#fff;border-color:#4d8dff}
+@media(max-width:520px){.media-service-links{gap:4px}.media-service-links a{padding:6px 8px;font-size:10px}}

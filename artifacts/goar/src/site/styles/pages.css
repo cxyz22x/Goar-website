@@ -1,0 +1,12 @@
+.g .page{max-width:920px}
+.g .page h1{max-width:none}
+.g .notice-list,.g .legal ul,.g .legal ol{list-style:none;padding:0;margin:0 0 30px}
+.g .notice-list li{padding:19px 0;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}.g .notice-list strong{display:block;margin-bottom:7px;color:var(--text);font-weight:600}
+.g .notice-list a,.g .legal a{border-bottom:1px solid var(--accent)}
+.g .contact-mail{font-size:28px;letter-spacing:-.03em}.g .contact-mail a{border-bottom:1px solid var(--accent)}
+.g .legal{color:var(--muted);font-size:15px}.g .legal h1{font-size:40px;max-width:none}.g .legal h2{font-size:26px;margin-top:1.6em}.g .legal h3{font-size:19px;margin-top:1.4em}
+.g .legal h1,.g .legal h2,.g .legal h3{color:var(--text)}
+.g .legal ul,.g .legal ol{list-style:revert;padding-left:22px}.g .legal li{margin-bottom:6px}
+.g .legal table{border-collapse:collapse;width:100%;display:block;overflow:auto;font-size:14px}.g .legal td,.g .legal th{border:1px solid var(--line);padding:8px 10px;text-align:left}
+.g .legal code{font-family:monospace;font-size:.88em;background:var(--panel);padding:1px 5px}
+.g .callout{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);padding:20px 22px;margin:0 0 36px;font-size:14px}.g .callout h2{font-size:19px;margin:0 0 10px;color:var(--text)}.g .callout p:last-child{margin:0}

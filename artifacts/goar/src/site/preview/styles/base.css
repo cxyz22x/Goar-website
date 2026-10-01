@@ -1,0 +1,35 @@
+/* body rules apply to the route root */
+.gp{*, *::before, *::after { box-sizing: border-box; }
+&{
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.55;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+
+.skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+}
+.skip:focus {
+  left: var(--pad);
+  top: 0.5rem;
+  z-index: 80;
+  background: var(--fg);
+  color: var(--invert);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+}
+
+.wrap {
+  width: min(var(--max), calc(100% - 2 * var(--pad)));
+  margin-inline: auto;
+}
+
+}

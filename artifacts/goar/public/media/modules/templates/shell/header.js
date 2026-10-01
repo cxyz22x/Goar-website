@@ -1,0 +1,1 @@
+export const shellHeader = "<header id=\"app-shell\">\n  <button class=\"brand\" type=\"button\" data-view=\"home\">goarxyz <span class=\"marks\"><span>○</span><span>□</span><span>△</span><span>✕</span></span></button>\n  <nav class=\"media-service-links\" aria-label=\"Goar links\">\n    <a href=\"/\">Goar</a>\n    <a href=\"/connections\">Connections</a>\n  </nav>\n</header>";

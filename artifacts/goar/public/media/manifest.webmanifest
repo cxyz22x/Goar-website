@@ -1,0 +1,29 @@
+{
+  "id": "./index.html",
+  "name": "goarxyz",
+  "short_name": "goarxyz",
+  "description": "Movies, TV, anime, kids and music",
+  "start_url": "./index.html?view=home",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#0a0a0d",
+  "theme_color": "#0a0a0d",
+  "categories": [
+    "entertainment",
+    "video"
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

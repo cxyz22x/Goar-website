@@ -1,0 +1,12 @@
+.g .hero{padding:80px var(--pad) 65px;display:grid;grid-template-columns:1.2fr 1fr;gap:70px;align-items:center;min-height:76vh}
+.g .demo{border:1px solid var(--line);background:var(--panel)}
+.g .demo-head{display:flex;justify-content:space-between;gap:15px;padding:16px 22px;border-bottom:1px solid var(--line);font-family:monospace;font-size:11px;color:var(--muted)}.g .demo-head span:last-child{color:var(--accent)}
+.g .prompt{padding:26px 22px;font-size:21px;line-height:1.4;letter-spacing:-.03em;border-bottom:1px solid var(--line);margin:0}
+.g .steps{list-style:none;margin:0;padding:12px 22px}.g .steps li{display:flex;gap:15px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--line);font-size:13px}.g .steps li:last-child{border:0}
+.g .step-num{font-family:monospace;color:var(--accent);font-size:11px}
+.g .progress{height:2px;background:var(--line);overflow:hidden}.g .progress:after{content:"";display:block;height:100%;background:var(--accent);animation:goar-progress 12s linear infinite}
+@keyframes goar-progress{from{width:0}to{width:100%}}
+.g .hero .steps li{animation:goar-sequence 12s infinite}.g .hero .steps li:nth-child(2){animation-delay:2s}.g .hero .steps li:nth-child(3){animation-delay:4s}.g .hero .steps li:nth-child(4){animation-delay:6s}
+@keyframes goar-sequence{0%,80%,100%{opacity:.4}12%,65%{opacity:1}}
+@media(max-width:850px){.g .hero{grid-template-columns:1fr;gap:35px;padding-top:45px}.g h1{max-width:14ch}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.g *,.g *:after{animation:none!important}.g .hero .steps li{opacity:1}.g .progress:after{width:100%}}

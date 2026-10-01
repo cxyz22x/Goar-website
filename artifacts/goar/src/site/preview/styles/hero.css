@@ -1,0 +1,42 @@
+.gp{
+/* Hero */
+.hero {
+  padding: 4.5rem 0 3rem;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+.kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin: 0 0 1rem;
+}
+h1, h2, h3 { letter-spacing: -0.045em; font-weight: 650; line-height: 1.08; margin: 0; }
+h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); max-width: 11ch; }
+.lede {
+  margin: 1.25rem 0 2rem;
+  font-size: 1.12rem;
+  color: var(--fg-dim);
+  max-width: 36rem;
+}
+.cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid var(--fg);
+}
+.pill.solid { background: var(--fg); color: var(--invert); }
+.pill.ghost { background: transparent; color: var(--fg); }
+.pill:hover { opacity: 0.88; }
+
+}

@@ -1,0 +1,9 @@
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/compat.css';
+import '../styles/header.css';
+import '../styles/hero.css';
+import '../styles/phone.css';
+import '../styles/sections.css';
+import '../styles/footer.css';
+import '../styles/responsive.css';

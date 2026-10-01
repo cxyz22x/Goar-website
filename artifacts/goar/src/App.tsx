@@ -8,6 +8,9 @@ import Home from '@/site/Home';
 import Launch from '@/site/Launch';
 import Legal from '@/site/Legal';
 import Contact from '@/site/Contact';
+import Connections from '@/connections/Connections';
+import AgentWorkspace from '@/agent/AgentWorkspace';
+import { usePageMetadata } from '@/site/usePageMetadata';
 import {
   Route,
   Switch,
@@ -18,13 +21,17 @@ import {
 const queryClient = new QueryClient();
 
 function Router() {
+  usePageMetadata();
   return (
     // Keep a shared shell (sidebar, navbar) outside the boundary so it
     // survives a page crash.
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/index.html" component={Home} />
         <Route path="/launch" component={Launch} />
+        <Route path="/connections" component={Connections} />
+        <Route path="/agent" component={AgentWorkspace} />
         {['privacy', 'terms', 'license', 'data-safety'].map((k) => (
           <Route key={k} path={`/${k}.html`}>{() => <Legal slug={k} />}</Route>
         ))}
