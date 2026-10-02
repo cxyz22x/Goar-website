@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>goarxyz — Play</title>
+<link rel="stylesheet" href="games.css" />
+</head>
+<body>
+<div class="play-shell">
+  <div class="play-shell-bar">
+    <b id="shellTitle">Game</b>
+    <span id="shellStatus" role="status" aria-live="polite">Loading game…</span>
+    <button type="button" id="shellRetry" hidden>Retry</button>
+  </div>
+  <div class="play-shell-stage">
+    <iframe id="shellFrame" title="Game" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-modals allow-orientation-lock allow-downloads" allow="autoplay; fullscreen; gamepad; pointer-lock; accelerometer; gyroscope" allowfullscreen></iframe>
+    <div class="play-shell-cover" id="shellCover">
+      <div class="play-spinner" aria-hidden="true"></div>
+      <div id="shellCoverText">Loading game…</div>
+    </div>
+  </div>
+</div>
+<script src="play.js"></script>
+</body>
+</html>

@@ -2,14 +2,18 @@
 
 A Goar product website with connected online-agent, media, music and games services. Marketing remains the primary page at `/`. The supplied browser agent is not Goar or a browser edition of Goar.
 
+## Games
+
+Games launch through our own player shell at `artifacts/goar/public/pages/games/play.html`. The shell loads the real marketjs game from `cdn-factory.marketjs.com` / `cdn-consumer.marketjs.com` inside a same-origin frame and keeps a loading cover over the frame until the game document has actually loaded; the cover exposes retry and status if the publisher or network fails. The catalogue is `artifacts/goar/public/games.json`.
+
 ## Run & operate
 
 - Managed workflow: `artifacts/goar: web`
 - Frontend typecheck: `pnpm --filter @workspace/goar run typecheck`
 - Production build check: `PORT=5000 BASE_PATH=/ pnpm --filter @workspace/goar run build`
-- Agent status regression checks: `node --experimental-strip-types --test artifacts/goar/src/agent/runtime-dom.test.ts`
+
 - Media extraction regression checks: `node --test scripts/media-regressions.test.mjs`
-- Main-page reference and mobile Menu/theme comparison: `node scripts/check-agent-boundary.mjs --preview`
+- Main-page reference and mobile Menu/theme comparison: `GOAR_ORIGIN=http://localhost:5000 node scripts/check-agent-boundary.mjs --preview` (with the preview server running)
 - Product pages and launch page live in `artifacts/goar/src/site`.
 - Connection cards and app-facing link instructions live in `artifacts/goar/src/connections`, at `/connections`.
 - The authored agent wrapper is in `artifacts/goar/src/agent`, at `/agent`; the original supplied application is served unchanged at `/workspace/index.html`.

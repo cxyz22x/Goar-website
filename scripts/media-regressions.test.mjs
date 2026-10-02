@@ -236,7 +236,7 @@ test("the latest Watch, Music, Games, Live, and Anime pages stay self-contained 
   const watch = await readLatest("watch/watch.js");
   assert.ok(!watch.includes("serviceWorker"), "the imported pages must not register a root-scoped service worker");
   const floatingMenu = await readFile(resolve(workspace, "artifacts/goar/public/shared/float.js"), "utf8");
-  assert.ok(floatingMenu.includes('new URL("agent", ROOT)'), "the shared service menu must provide the existing agent");
+  assert.ok(floatingMenu.includes('new URL("workspace/index.html", ROOT)'), "the shared service menu must provide the existing agent");
   assert.ok(floatingMenu.includes('new URL("index.html", ROOT)'), "the shared service menu must link to the existing homepage");
 });
 

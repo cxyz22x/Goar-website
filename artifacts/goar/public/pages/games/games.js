@@ -1,4 +1,3 @@
-const GIST = "https://gist.githubusercontent.com/goarxyz/32cda7ea99aceb680a533cb51fb6546f/raw/af549f9cbfdfa6a0287d66c6084209cc75f5985b/marketjs.json";
 const $ = (s) => document.querySelector(s);
 function esc(s){
   return String(s || "").replace(/[&<>"']/g, (c) => ({
@@ -17,7 +16,7 @@ function parse(raw){
   return Array.isArray(json) ? json : Object.values(json || {});
 }
 async function loadGames(){
-  for (const url of ["../../games.json", GIST]){
+  for (const url of ["../../games.json"]){
     try {
       const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) continue;
@@ -48,11 +47,22 @@ function paintGames(){
   box.innerHTML = rows.map((g) => `<button type="button" class="gcard" data-id="${esc(g.id)}"><img src="${esc(g.cover || "")}" alt="" loading="lazy"><div class="m"><b>${esc(g.title)}</b><span>${esc(g.category || "arcade")}</span></div></button>`).join("");
   box.querySelectorAll(".gcard").forEach((el) => el.onclick = () => openGame(el.dataset.id));
 }
+const PLAY_HOSTS = ["cdn-factory.marketjs.com", "cdn-consumer.marketjs.com"];
+function gameUrl(g){
+  try {
+    const url = new URL(g.file);
+    if (url.protocol !== "https:" || !PLAY_HOSTS.includes(url.hostname)) return "";
+    if (url.hostname === "cdn-consumer.marketjs.com" && /^\/game\/[^/]+$/.test(url.pathname)) url.pathname += "/";
+    return url.href;
+  } catch (_) { return ""; }
+}
 function openGame(id){
   const g = games.find((x) => x.id === id);
   if (!g) return;
+  const src = gameUrl(g);
+  if (!src) return;
   $("#playTitle").textContent = g.title;
-  $("#playFrame").src = g.file;
+  $("#playFrame").src = "play.html?title=" + encodeURIComponent(g.title) + "&src=" + encodeURIComponent(src);
   $("#play").classList.add("on");
 }
 function closeGame(){
