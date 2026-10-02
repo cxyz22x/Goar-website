@@ -1,43 +1,66 @@
 (function(){
   const ROOT = new URL("../", document.currentScript.src);
   const LINKS = [
-    ["Home", new URL("index.html", ROOT).href],
-    ["Agent", new URL("agent", ROOT).href],
+    ["Product home", new URL("index.html", ROOT).href],
+    ["Agent", new URL("workspace/index.html", ROOT).href],
     ["Movies", new URL("pages/watch/index.html?tab=movie", ROOT).href],
     ["TV", new URL("pages/watch/index.html?tab=tv", ROOT).href],
     ["Music", new URL("pages/music/index.html", ROOT).href],
     ["Games", new URL("pages/games/index.html", ROOT).href],
     ["Live", new URL("pages/live/index.html", ROOT).href],
-    ["Anime", new URL("pages/anime/index.html", ROOT).href]
+    ["Anime", new URL("pages/anime/index.html", ROOT).href],
+    ["Media home", new URL("pages/home/index.html", ROOT).href],
+    ["Privacy", new URL("privacy.html", ROOT).href],
+    ["Terms", new URL("terms.html", ROOT).href],
+    ["License", new URL("license.html", ROOT).href],
+    ["Data safety", new URL("data-safety.html", ROOT).href],
+    ["Contact", new URL("contact.html", ROOT).href]
   ];
   const btn = document.createElement("button");
   btn.id = "goarFloat";
   btn.type = "button";
-  btn.setAttribute("aria-label", "Menu");
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  btn.setAttribute("aria-label", "Open Goar pages");
+  btn.setAttribute("aria-controls", "goarFloatMenu");
+  btn.setAttribute("aria-expanded", "false");
+  btn.title = "Goar pages";
+  const logo = document.createElement("img");
+  logo.src = new URL("brand.png", ROOT).href;
+  logo.alt = "";
+  logo.setAttribute("aria-hidden", "true");
+  btn.appendChild(logo);
   const menu = document.createElement("nav");
   menu.id = "goarFloatMenu";
+  menu.setAttribute("aria-label", "Goar pages");
   menu.hidden = true;
-  const here = location.pathname;
+  const here = new URL(location.href);
+  function normalizedPath(path){
+    const normalized = path.replace(/\/index\.html$/, "/").replace(/\/+$/, "");
+    return normalized || "/";
+  }
   LINKS.forEach(function(pair){
     const a = document.createElement("a");
     a.href = pair[1];
     a.textContent = pair[0];
-    const path = pair[1].split("?")[0].replace(/index\.html$/, "");
-    if (here.indexOf(path) === 0) a.className = "on";
+    const target = new URL(pair[1]);
+    const samePath = normalizedPath(here.pathname) === normalizedPath(target.pathname);
+    const sameTab = !target.searchParams.has("tab") || here.searchParams.get("tab") === target.searchParams.get("tab");
+    if (samePath && sameTab) {
+      a.className = "on";
+      a.setAttribute("aria-current", "page");
+    }
     menu.appendChild(a);
   });
   document.body.appendChild(menu);
   document.body.appendChild(btn);
   const KEY = "goar-float";
   function place(x, y){
-    const w = 56, h = 56;
+    const w = 44, h = 44;
     x = Math.max(8, Math.min(x, innerWidth - w - 8));
     y = Math.max(8, Math.min(y, innerHeight - h - 8));
     btn.style.left = x + "px";
     btn.style.top = y + "px";
-    const mw = menu.offsetWidth || 160;
-    const mh = menu.offsetHeight || 300;
+    const mw = menu.offsetWidth || 190;
+    const mh = Math.min(menu.offsetHeight || 400, innerHeight - 16);
     let mx = x - mw - 10;
     if (mx < 8) mx = x + w + 10;
     let my = y;
@@ -47,9 +70,11 @@
   }
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
-  place(saved && typeof saved.x === "number" ? saved.x : innerWidth - 72, saved && typeof saved.y === "number" ? saved.y : innerHeight - 88);
-  let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  menu.style.maxHeight = Math.max(80, innerHeight - 16) + "px";
+  place(saved && typeof saved.x === "number" ? saved.x : innerWidth - 60, saved && typeof saved.y === "number" ? saved.y : innerHeight - 74);
+  let dragging = false, moved = false, suppressClick = false, sx = 0, sy = 0, ox = 0, oy = 0;
   btn.addEventListener("pointerdown", function(e){
+    if (e.button !== 0) return;
     dragging = true;
     moved = false;
     btn.setPointerCapture(e.pointerId);
@@ -67,10 +92,33 @@
     dragging = false;
     const r = btn.getBoundingClientRect();
     try { localStorage.setItem(KEY, JSON.stringify({ x: r.left, y: r.top })); } catch (e) {}
-    if (!moved) menu.hidden = !menu.hidden;
+    if (moved) {
+      suppressClick = true;
+      setTimeout(function(){ suppressClick = false; }, 0);
+    }
   });
   btn.addEventListener("pointercancel", function(){ dragging = false; });
+  btn.addEventListener("click", function(){
+    if (suppressClick) return;
+    menu.hidden = !menu.hidden;
+    btn.setAttribute("aria-expanded", String(!menu.hidden));
+    const r = btn.getBoundingClientRect();
+    place(r.left, r.top);
+    if (!menu.hidden) menu.querySelector("a.on")?.focus();
+  });
+  document.addEventListener("click", function(event){
+    if (menu.hidden || btn.contains(event.target) || menu.contains(event.target)) return;
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener("keydown", function(event){
+    if (event.key !== "Escape" || menu.hidden) return;
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    btn.focus();
+  });
   addEventListener("resize", function(){
+    menu.style.maxHeight = Math.max(80, innerHeight - 16) + "px";
     const r = btn.getBoundingClientRect();
     place(r.left, r.top);
   });

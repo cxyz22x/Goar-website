@@ -31,14 +31,14 @@
 .goar-landing h1, .goar-landing h2, .goar-landing h3 { font-weight: 500; }
 .goar-landing a:focus-visible, .goar-landing button:focus-visible { outline: 2px solid var(--g-fg); outline-offset: 5px; border-radius: 3px; }
 .goar-landing .goar-shell { width: min(var(--g-max), calc(100% - 2 * var(--g-gutter))); margin-inline: auto; }
-.goar-landing .goar-mark { display: inline-flex; width: 27px; height: 27px; position: relative; align-items: center; justify-content: center; flex: 0 0 auto; }
-.goar-landing .goar-mark i { position: absolute; display: block; width: 18px; height: 18px; border: 1.7px solid currentColor; transform: rotate(45deg); }
-.goar-landing .goar-mark i:last-child { width: 8px; height: 8px; border: 0; background: currentColor; }
+.goar-landing .goar-mark { display: inline-block; width: 27px; height: 27px; object-fit: cover; border-radius: 50%; flex: 0 0 auto; background: #000; }
 .goar-landing .goar-brand { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; color: var(--g-fg); text-decoration: none; font-size: 19px; font-weight: 700; letter-spacing: -.07em; }
 .goar-landing .goar-header { position: sticky; z-index: 30; top: 0; border-bottom: 1px solid color-mix(in srgb, var(--g-line) 80%, transparent); background: color-mix(in srgb, var(--g-ink) 91%, transparent); backdrop-filter: blur(18px); }
 .goar-landing .header-row { min-height: 74px; display: flex; align-items: center; gap: 30px; }
 .goar-landing .goar-nav { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 .goar-landing .nav-disclosure { position: relative; }
+.goar-landing .nav-direct-link { display: inline-flex; min-height: 44px; align-items: center; padding: 0 13px; border-radius: 999px; color: var(--g-dim); text-decoration: none; font-size: 12px; white-space: nowrap; }
+.goar-landing .nav-direct-link:hover, .goar-landing .nav-direct-link[aria-current="page"] { color: var(--g-fg); background: color-mix(in srgb, var(--g-ink-panel) 72%, transparent); }
 .goar-landing .nav-disclosure-trigger { display: inline-flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 13px; color: var(--g-dim); background: transparent; border: 1px solid transparent; border-radius: 999px; cursor: pointer; font-size: 12px; white-space: nowrap; }
 .goar-landing .nav-disclosure-trigger:hover, .goar-landing .nav-disclosure-trigger.is-open { color: var(--g-fg); background: color-mix(in srgb, var(--g-ink-panel) 72%, transparent); }
 .goar-landing .nav-chevron { width: 6px; height: 6px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: translateY(-2px) rotate(45deg); }
@@ -107,8 +107,6 @@
 .goar-landing .phone-appbar strong { font-weight: 600; }
 .goar-landing .phone-appbar > span:last-child { margin-left: auto; color: var(--g-dim); font: 9px var(--g-mono); }
 .goar-landing .small-mark { width: 17px; height: 17px; }
-.goar-landing .small-mark i { width: 12px; height: 12px; border-width: 1.2px; }
-.goar-landing .small-mark i:last-child { width: 5px; height: 5px; }
 .goar-landing .phone-thread { flex: 1; padding: 19px 14px; display: flex; flex-direction: column; gap: 11px; }
 .goar-landing .phone-date { color: var(--g-dim); font: 8px var(--g-mono); letter-spacing: .1em; text-align: center; margin-bottom: 10px; }
 .goar-landing .phone-user { align-self: flex-end; max-width: 90%; padding: 12px; border-radius: 14px 14px 3px 14px; background: var(--g-fg); color: var(--g-ink); font-size: 11px; }
@@ -185,9 +183,7 @@
 .goar-landing .architecture-device, .goar-landing .architecture-host { min-height: 230px; border: 1px solid color-mix(in srgb, var(--g-ink) 25%, transparent); background: color-mix(in srgb, var(--g-bone) 70%, transparent); padding: 18px; display: flex; flex-direction: column; align-items: flex-start; }
 .goar-landing .architecture-device { border-color: var(--g-ink); background: var(--g-ink); color: var(--g-fg); }
 .goar-landing .arch-tag { color: var(--g-dim); font: 8px var(--g-mono); display: flex; align-items: center; gap: 8px; }
-.goar-landing .architecture-mark { margin-top: 24px; color: var(--g-fg); width: 30px; height: 30px; }
-.goar-landing .architecture-mark i { width: 20px; height: 20px; }
-.goar-landing .architecture-mark i:last-child { width: 9px; height: 9px; }
+.goar-landing .architecture-mark { margin-top: 24px; width: 30px; height: 30px; }
 .goar-landing .architecture-device strong, .goar-landing .architecture-host strong { margin-top: 10px; font-size: 15px; }
 .goar-landing .architecture-device > span:not(.goar-mark), .goar-landing .architecture-host > span:not(.goar-mark) { font-size: 9px; color: var(--g-dim); margin-top: 3px; }
 .goar-landing .arch-local { margin-top: auto; padding-top: 12px; width: 100%; border-top: 1px solid var(--g-line); color: var(--g-dim); font: 8px var(--g-mono); }

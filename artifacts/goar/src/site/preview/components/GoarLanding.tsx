@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Link } from 'wouter';
-import { docLinks, facts, mediaViews, policies, serviceLinks, surfaces } from '../data/content';
+import { BASE, docLinks, facts, mediaViews, policies, serviceLinks, surfaces } from '../data/content';
 import { appSchema } from '../data/schema';
 
 type Theme = 'light' | 'dark';
 type NavPanel = 'android' | 'web' | 'about';
 
 function Mark({ className = '' }: { className?: string }) {
-  return <span className={`goar-mark ${className}`} aria-hidden="true"><i /><i /></span>;
+  return <img className={`goar-mark ${className}`} src={`${BASE}brand.png`} alt="" aria-hidden="true" />;
 }
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -49,6 +49,7 @@ function Header({ theme, onTheme }: { theme: Theme; onTheme: () => void }) {
     { id: 'web', label: 'Web experiences', title: 'Separate web destinations' },
     { id: 'about', label: 'About', title: 'About Goar' },
   ];
+  const agent = serviceLinks.find((service) => service.label === 'Agent');
 
   return (
     <header className={`goar-header${menuOpen ? ' menu-open' : ''}`}>
@@ -60,6 +61,7 @@ function Header({ theme, onTheme }: { theme: Theme; onTheme: () => void }) {
           <span>{menuOpen ? 'Close' : 'Menu'}</span><span className="menu-glyph" aria-hidden="true"><i /><i /></span>
         </button>
         <nav className="goar-nav" id="goar-primary-nav" aria-label="Primary navigation">
+          {agent && <a className="nav-direct-link" href={agent.href} data-testid="link-nav-agent" onClick={closeNavigation}>Agent</a>}
           {panels.map(({ id, label, title }) => (
             <div className={`nav-disclosure nav-disclosure-${id}`} key={id}>
               <button className={`nav-disclosure-trigger${openPanel === id ? ' is-open' : ''}`} type="button"
@@ -73,7 +75,7 @@ function Header({ theme, onTheme }: { theme: Theme; onTheme: () => void }) {
                 {id === 'android' && <Link className="nav-panel-link nav-home-link" href="/" aria-current="page" onClick={closeNavigation}>
                   <span>Product home</span><small>Goar on your phone</small>
                 </Link>}
-                {id === 'web' && serviceLinks.map((service) => {
+                {id === 'web' && serviceLinks.filter((service) => service.label !== 'Agent').map((service) => {
                   const content = <><span>{service.label}</span><small>Separate web page</small><b>WEB</b></>;
                   return service.internal
                     ? <Link className="nav-panel-link nav-web-link" href={service.href} key={service.href} data-testid={`link-nav-${service.label.toLowerCase()}`} onClick={closeNavigation}>{content}</Link>
@@ -191,8 +193,8 @@ function MediaSection() {
     <div className="media-list">{mediaViews.map((item, index) => <a className="media-link" href={item.href} key={item.href}>
       <span className="media-number">0{index + 1}</span><span>{item.label}</span><span className="media-link-note">SEPARATE WEB PAGE</span><Arrow diagonal />
     </a>)}
-      {agent && <Link className="agent-destination" href={agent.href}><span className="agent-destination-mark"><Mark /></span>
-        <span><small>ALSO ON THE WEB</small><strong>Browser agent</strong></span><span className="agent-destination-copy">Separate from the Android app.</span><Arrow diagonal /></Link>}
+      {agent && <a className="agent-destination" href={agent.href}><span className="agent-destination-mark"><Mark /></span>
+        <span><small>ALSO ON THE WEB</small><strong>Browser agent</strong></span><span className="agent-destination-copy">Separate from the Android app.</span><Arrow diagonal /></a>}
     </div>
   </div></section>;
 }

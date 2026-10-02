@@ -12,7 +12,7 @@ export const docLinks = [
 
 /* Connected website services, added as entry points beside the source links. */
 export const serviceLinks = [
-  { href: '/agent', label: 'Agent', internal: true },
+  { href: `${BASE}workspace/index.html`, label: 'Agent', internal: false },
   { href: `${BASE}pages/watch/index.html?tab=movie`, label: 'Watch', internal: false },
   { href: `${BASE}pages/music/index.html`, label: 'Music', internal: false },
   { href: `${BASE}pages/games/index.html`, label: 'Games', internal: false },

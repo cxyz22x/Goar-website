@@ -7,7 +7,6 @@ import NotFound from '@/pages/not-found';
 import Home from '@/site/Home';
 import Legal from '@/site/Legal';
 import Contact from '@/site/Contact';
-import AgentWorkspace from '@/agent/AgentWorkspace';
 import { usePageMetadata } from '@/site/usePageMetadata';
 import {
   Route,
@@ -42,6 +41,12 @@ function OpenMedia({ view }: { view: string }) {
   return <p role="status">Opening media… <a href={destination.href}>Continue</a></p>;
 }
 
+function OpenStandaloneAgent() {
+  const destination = `${import.meta.env.BASE_URL}workspace/index.html`;
+  useEffect(() => { window.location.replace(destination); }, [destination]);
+  return <p role="status">Opening the standalone browser agent… <a href={destination}>Continue</a></p>;
+}
+
 function Router() {
   usePageMetadata();
   return (
@@ -57,7 +62,7 @@ function Router() {
         {['/connections', '/connections.html'].map(path => (
           <Route key={path} path={path}><Redirect to="/" replace /></Route>
         ))}
-        <Route path="/agent" component={AgentWorkspace} />
+        <Route path="/agent" component={OpenStandaloneAgent} />
         {['watch', 'movies', 'tv', 'anime', 'kids', 'live', 'hubs', 'list', 'music', 'games', 'media'].flatMap(view =>
           [`/${view}`, `/${view}/`, `/${view}/index.html`].map(path => (
             <Route key={path} path={path}><OpenMedia view={view === 'media' ? 'home' : view === 'movies' ? 'movie' : view} /></Route>
