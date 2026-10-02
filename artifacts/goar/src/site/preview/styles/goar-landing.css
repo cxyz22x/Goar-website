@@ -61,6 +61,22 @@
 .goar-landing .theme-toggle { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; margin-left: 8px; border: 1px solid var(--g-line); border-radius: 999px; background: transparent; cursor: pointer; }
 .goar-landing .theme-toggle:hover { background: var(--g-ink-panel); }
 .goar-landing .theme-label { color: var(--g-dim); font-size: 11px; }
+.goar-landing .pwa-install-control { display: flex; align-items: center; }
+.goar-landing .pwa-install-trigger { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border: 1px solid var(--g-line); border-radius: 999px; color: var(--g-fg); background: transparent; cursor: pointer; font-size: 11px; white-space: nowrap; }
+.goar-landing .pwa-install-trigger:hover { background: var(--g-ink-panel); }
+.goar-landing .pwa-install-trigger:disabled { color: var(--g-dim); cursor: default; }
+.goar-landing .pwa-install-trigger svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pwa-install-backdrop { --g-ink-raised: #1a1a17; --g-line: #34342f; --g-fg: #eee9de; --g-dim: #a7a397; --g-ink-panel: #20201d; position: fixed; z-index: 10020; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(0 0 0 / 68%); backdrop-filter: blur(8px); font-family: system-ui, sans-serif; color: var(--g-fg); }
+.pwa-install-backdrop[data-theme="light"] { --g-ink-raised: #f0ece3; --g-line: #c8c1b4; --g-fg: #171714; --g-dim: #625f57; --g-ink-panel: #ddd8ce; }
+.pwa-install-dialog { width: min(420px, 100%); padding: 26px; border: 1px solid var(--g-line); background: var(--g-ink-raised); color: var(--g-fg); box-shadow: 0 24px 70px #0007; }
+.pwa-install-dialog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.pwa-install-mark { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; overflow: hidden; border-radius: 50%; background: #000; }
+.pwa-install-mark img { width: 100%; height: 100%; object-fit: cover; }
+.pwa-install-close { width: 40px; height: 40px; border: 1px solid var(--g-line); border-radius: 50%; color: var(--g-fg); background: transparent; cursor: pointer; font: inherit; font-size: 22px; line-height: 1; }
+.pwa-install-dialog h2 { margin: 0 0 12px; font-size: 27px; line-height: 1.15; letter-spacing: -.04em; }
+.pwa-install-dialog p { color: var(--g-dim); font-size: 14px; line-height: 1.65; }
+.pwa-install-dialog .pwa-install-steps { margin: 18px 0 0; padding: 14px 16px; border-left: 2px solid var(--g-line); color: var(--g-fg); background: var(--g-ink-panel); font-size: 12px; }
+.pwa-install-steps strong { color: var(--g-fg); }
 .goar-landing .theme-glyph { position: relative; width: 16px; height: 16px; display: inline-block; border: 1.3px solid var(--g-fg); border-radius: 50%; overflow: hidden; }
 .goar-landing .theme-glyph i { position: absolute; top: -2px; left: 7px; height: 18px; width: 8px; border-left: 1px solid var(--g-fg); background: var(--g-ink); }
 .goar-landing .theme-glyph.light { background: var(--g-fg); }
@@ -262,6 +278,7 @@
   .goar-landing .nav-panel-title { padding-inline: 9px; }
   .goar-landing .nav-panel-link { min-height: 46px; padding-inline: 10px; }
   .goar-landing .theme-toggle { align-self: flex-start; margin: 10px 0 0; }
+  .goar-landing .pwa-install-control { align-self: flex-start; margin-top: 10px; }
   .goar-landing .hero-art { min-height: 540px; }
   .goar-landing .phone-ui { min-height: 470px; }
   .goar-landing .architecture { grid-template-columns: 1fr 90px 1fr; padding-inline: 16px; }

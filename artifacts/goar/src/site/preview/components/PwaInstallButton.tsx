@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type InstallOutcome = 'accepted' | 'dismissed';
+type Theme = 'light' | 'dark';
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,7 +14,7 @@ function isRunningStandalone() {
     || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
-export default function PwaInstallButton() {
+export default function PwaInstallButton({ theme }: { theme: Theme }) {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -43,7 +45,12 @@ export default function PwaInstallButton() {
     if (!showInstructions) return;
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowInstructions(false);
+      if (event.key === 'Escape') {
+        setShowInstructions(false);
+      } else if (event.key === 'Tab') {
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => {
@@ -57,10 +64,15 @@ export default function PwaInstallButton() {
       setShowInstructions(true);
       return;
     }
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    setInstallPrompt(null);
-    if (choice.outcome === 'accepted') setInstalled(true);
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === 'accepted') setInstalled(true);
+    } catch {
+      setShowInstructions(true);
+    } finally {
+      setInstallPrompt(null);
+    }
   };
 
   return (
@@ -81,9 +93,10 @@ export default function PwaInstallButton() {
         </button>
       </div>
 
-      {showInstructions && (
+      {showInstructions && createPortal(
         <div
           className="pwa-install-backdrop"
+          data-theme={theme}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setShowInstructions(false);
           }}
@@ -116,7 +129,8 @@ export default function PwaInstallButton() {
               On iPhone or iPad, use Share, then Add to Home Screen.
             </p>
           </section>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Goar — one system on this phone",
   "short_name": "Goar",
-  "description": "The Goar website and browser experiences, available as an installable web app.",
+  "description": "Explore Goar, open the browser workspace, and browse Goar's web experiences.",
   "lang": "en",
   "start_url": "./",
   "scope": "./",

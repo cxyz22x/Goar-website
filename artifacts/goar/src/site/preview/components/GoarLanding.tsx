@@ -89,7 +89,7 @@ function Header({ theme, onTheme }: { theme: Theme; onTheme: () => void }) {
           <button className="theme-toggle" type="button" onClick={onTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
             <span className={`theme-glyph ${theme}`} aria-hidden="true"><i /></span><span className="theme-label">{theme === 'dark' ? 'Light' : 'Dark'}</span>
           </button>
-          <PwaInstallButton />
+          <PwaInstallButton theme={theme} />
         </nav>
       </div>
     </header>

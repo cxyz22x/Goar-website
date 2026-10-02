@@ -1,5 +1,20 @@
 (function(){
   const ROOT = new URL("../", document.currentScript.src);
+  const hostname = location.hostname;
+  const isDevelopmentHost = hostname === "localhost"
+    || hostname === "127.0.0.1"
+    || hostname === "::1"
+    || hostname.endsWith(".replit.dev");
+  if ("serviceWorker" in navigator && !isDevelopmentHost) {
+    addEventListener("load", function(){
+      navigator.serviceWorker.register(new URL("sw.js", ROOT).href, {
+        scope: ROOT.href,
+        updateViaCache: "none"
+      }).catch(function(error){
+        console.error("Goar offline support could not start.", error);
+      });
+    }, { once: true });
+  }
   const LINKS = [
     ["Product home", new URL("index.html", ROOT).href],
     ["Agent", new URL("workspace/index.html", ROOT).href],

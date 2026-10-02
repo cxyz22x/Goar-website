@@ -1,2 +1,2 @@
-- [Product scope](product-scope.md) — the supplied browser HTML is a try-it demo, not Goar or a browser edition; keep Android product claims separate.
+- [Product scope](product-scope.md) — use one Goar website/PWA scope, but keep browser-demo features distinct from the native Android product.
 - [Agent preset verification](agent-preset-verification.md) — fresh-profile SSH checks need the supplied preset; compare the unchanged source before attributing a failure.
