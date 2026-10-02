@@ -2,6 +2,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
@@ -32,6 +33,22 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    VitePWA({
+      strategies: 'generateSW',
+      registerType: 'prompt',
+      injectRegister: false,
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,json}'],
+        globIgnores: ['workspace/**'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/\/(?:pages|media|workspace)\//],
+        ignoreURLParametersMatching: [/^tab$/],
+        cleanupOutdatedCaches: true,
+        skipWaiting: false,
+        clientsClaim: false,
+      },
+    }),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined

@@ -8,8 +8,7 @@
   if ("serviceWorker" in navigator && !isDevelopmentHost) {
     addEventListener("load", function(){
       navigator.serviceWorker.register(new URL("sw.js", ROOT).href, {
-        scope: ROOT.href,
-        updateViaCache: "none"
+        scope: ROOT.href
       }).catch(function(error){
         console.error("Goar offline support could not start.", error);
       });
