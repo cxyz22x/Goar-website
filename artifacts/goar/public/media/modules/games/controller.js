@@ -75,7 +75,7 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
   function loadGameFrame(){
     if (!activeGame) return;
     const frame = document.getElementById("gameFrame");
-    const url = gameUrl(activeGame);
+    const url = shellUrl(activeGame);
     if (!url) {
       updateGameStatus("This catalogue entry has no valid game source.");
       return;
@@ -86,7 +86,7 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
     frame.title = (activeGame.title || "Game") + " player";
     frame.onload = function(){
       if (session !== gameSession) return;
-      updateGameStatus("Game page opened. If play does not start, retry or open separately.");
+      updateGameStatus("Game loaded from marketjs. If play does not start, retry or open separately.");
       window.clearTimeout(gameTimer);
       gameTimer = window.setTimeout(function(){
         if (session === gameSession) updateGameStatus("Still waiting? The publisher may block embedded play. Retry or open separately.");
@@ -100,7 +100,7 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
     frame.src = url;
     gameTimer = window.setTimeout(function(){
       if (session === gameSession) updateGameStatus("The game is taking a while to load. Retry or open separately.");
-    }, 20000);
+    }, 30000);
   }
   function renderGames(){
     const box = document.getElementById("gameGrid");
@@ -169,6 +169,12 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
       box.appendChild(card);
     });
   }
+  function shellUrl(game){
+    const src = gameUrl(game);
+    if (!src) return null;
+    const base = new URL("../../../pages/games/play.html", import.meta.url);
+    return base.href + "?title=" + encodeURIComponent(game.title || "Game") + "&src=" + encodeURIComponent(src);
+  }
   function playGame(id){
     const g = GAMES.find(function(x){ return x.id === id; });
     if (!g) return;
@@ -178,7 +184,7 @@ const titles={home:"goarxyz",movie:"Movies — goarxyz",tv:"TV — goarxyz",live
     activeGame = g;
     previousGameFocus = document.activeElement;
     document.getElementById("gameTitle").textContent = g.title || "Game";
-    link.href = gameUrl(g);
+    link.href = shellUrl(g);
     play.hidden = false;
     document.body.classList.add("playing-game");
     document.getElementById("gameBack").focus();

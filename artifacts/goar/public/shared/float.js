@@ -3,8 +3,7 @@
   const hostname = location.hostname;
   const isDevelopmentHost = hostname === "localhost"
     || hostname === "127.0.0.1"
-    || hostname === "::1"
-    || hostname.endsWith(".replit.dev");
+    || hostname === "::1";
   if ("serviceWorker" in navigator && !isDevelopmentHost) {
     addEventListener("load", function(){
       navigator.serviceWorker.register(new URL("sw.js", ROOT).href, {

@@ -6,9 +6,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const domain = process.env.REPLIT_DEV_DOMAIN;
-if (!domain) throw new Error("Run in the development workspace with REPLIT_DEV_DOMAIN available.");
-const origin = `https://${domain}`;
+const rawOrigin = process.env.GOAR_ORIGIN;
+if (!rawOrigin) throw new Error("Set GOAR_ORIGIN to the running site origin (e.g. http://localhost:5000).");
+const origin = rawOrigin.replace(/\/$/, "");
 const profile = await mkdtemp(join(tmpdir(), "goar-boundary-"));
 const port = 9229;
 const browser = spawn("chromium", [

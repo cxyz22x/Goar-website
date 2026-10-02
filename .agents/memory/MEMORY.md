@@ -1,3 +1,0 @@
-- [Product scope](product-scope.md) — use one Goar website/PWA scope, but keep browser-demo features distinct from the native Android product.
-- [Agent preset verification](agent-preset-verification.md) — fresh-profile SSH checks need the supplied preset; compare the unchanged source before attributing a failure.
-- [Goar PWA cache boundary](goar-pwa-cache-boundary.md) — share one site scope, but keep the large Agent document and live traffic out of precache.

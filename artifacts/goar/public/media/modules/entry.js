@@ -12,6 +12,7 @@ const serviceUrls = {
   watch: new URL("media/index.html?view=watch", mediaRoot).href,
   music: new URL("media/index.html?view=music", mediaRoot).href,
   games: new URL("media/index.html?view=games", mediaRoot).href,
+  gameShell: new URL("pages/games/play.html", mediaRoot).href,
 };
 document.querySelectorAll("#app-shell [data-service]").forEach((link) => {
   const href = serviceUrls[link.dataset.service];
